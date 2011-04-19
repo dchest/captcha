@@ -1,261 +1,70 @@
-package main
+package captcha
 
 import (
+	"bytes"
 	"image"
 	"image/png"
 	"os"
 	"rand"
 	"time"
 	crand "crypto/rand"
+	"github.com/dchest/uniuri"
 	"io"
+	"container/list"
+	"sync"
 )
-
-var numbers = [][]byte{
-	{
-		0, 1, 1, 1, 0,
-		1, 0, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		0, 1, 1, 1, 0,
-	},
-	{
-		0, 0, 1, 0, 0,
-		0, 1, 1, 0, 0,
-		1, 0, 1, 0, 0,
-		0, 0, 1, 0, 0,
-		0, 0, 1, 0, 0,
-		0, 0, 1, 0, 0,
-		0, 0, 1, 0, 0,
-		1, 1, 1, 1, 1,
-	},
-	{
-		0, 1, 1, 1, 0,
-		1, 0, 0, 0, 1,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 1, 1,
-		0, 1, 1, 0, 0,
-		1, 0, 0, 0, 0,
-		1, 0, 0, 0, 0,
-		1, 1, 1, 1, 1,
-	},
-	{
-		1, 1, 1, 1, 1,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 1, 1,
-		0, 1, 1, 0, 0,
-		0, 0, 0, 1, 0,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 0, 1,
-		1, 1, 1, 1, 0,
-	},
-	{
-		1, 0, 0, 1, 0,
-		1, 0, 0, 1, 0,
-		1, 0, 0, 1, 0,
-		1, 0, 0, 1, 0,
-		1, 1, 1, 1, 1,
-		0, 0, 0, 1, 0,
-		0, 0, 0, 1, 0,
-		0, 0, 0, 1, 0,
-	},
-	{
-		1, 1, 1, 1, 1,
-		1, 0, 0, 0, 0,
-		1, 0, 0, 0, 0,
-		1, 1, 1, 1, 0,
-		0, 0, 0, 1, 1,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 1, 1,
-		1, 1, 1, 1, 0,
-	},
-	{
-		0, 0, 1, 1, 1,
-		0, 1, 0, 0, 0,
-		1, 0, 0, 0, 0,
-		1, 1, 1, 1, 0,
-		1, 1, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		1, 1, 0, 0, 1,
-		0, 1, 1, 1, 0,
-	},
-	{
-		1, 1, 1, 1, 1,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 1, 0,
-		0, 0, 1, 0, 0,
-		0, 1, 0, 0, 0,
-		0, 1, 0, 0, 0,
-		0, 1, 0, 0, 0,
-	},
-	{
-		0, 1, 1, 1, 0,
-		1, 0, 0, 0, 1,
-		1, 1, 0, 1, 1,
-		0, 1, 1, 1, 0,
-		1, 1, 0, 1, 1,
-		1, 0, 0, 0, 1,
-		1, 1, 0, 1, 1,
-		0, 1, 1, 1, 0,
-	},
-	{
-		0, 1, 1, 1, 0,
-		1, 0, 0, 1, 1,
-		1, 0, 0, 0, 1,
-		1, 1, 0, 0, 1,
-		0, 1, 1, 1, 1,
-		0, 0, 0, 0, 1,
-		0, 0, 0, 0, 1,
-		1, 1, 1, 1, 0,
-	},
-}
 
 const (
-	NumberWidth  = 5
-	NumberHeight = 8
-	DotSize = 6
-	SkewFactor = 3
+	dotSize    = 6
+	maxSkew    = 3
+	expiration = 2 * 60 // 2 minutes
+	collectNum = 100    // number of items that triggers collection
 )
 
-func drawHorizLine(img *image.NRGBA, color image.Color, fromX, toX, y int) {
-	for x := fromX; x <= toX; x++ {
-		img.Set(x, y, color)
-	}
+type expValue struct {
+	timestamp int64
+	id        string
 }
 
-func drawCircle(img *image.NRGBA, color image.Color, x0, y0, radius int) {
-	f := 1 - radius
-	ddF_x := 1
-	ddF_y := -2 * radius
-	x := 0
-	y := radius
-
-	img.Set(x0, y0+radius, color)
-	img.Set(x0, y0-radius, color)
-	//img.Set(x0+radius, y0, color)
-	//img.Set(x0-radius, y0, color)
-	drawHorizLine(img, color, x0-radius, x0+radius, y0)
-
-	for x < y {
-		// ddF_x == 2 * x + 1;
-		// ddF_y == -2 * y;
-		// f == x*x + y*y - radius*radius + 2*x - y + 1;
-		if f >= 0 {
-			y--
-			ddF_y += 2
-			f += ddF_y
-		}
-		x++
-		ddF_x += 2
-		f += ddF_x
-		//img.Set(x0+x, y0+y, color)
-		//img.Set(x0-x, y0+y, color)
-		drawHorizLine(img, color, x0-x, x0+x, y0+y)
-		//img.Set(x0+x, y0-y, color)
-		//img.Set(x0-x, y0-y, color)
-		drawHorizLine(img, color, x0-x, x0+x, y0-y)
-		//img.Set(x0+y, y0+x, color)
-		//img.Set(x0-y, y0+x, color)
-		drawHorizLine(img, color, x0-y, x0+y, y0+x)
-		//img.Set(x0+y, y0-x, color)
-		//img.Set(x0-y, y0-x, color)
-		drawHorizLine(img, color, x0-y, x0+y, y0-x)
-	}
+type storage struct {
+	mu  sync.RWMutex
+	ids map[string][]byte
+	exp *list.List
+	// Number of items stored after last collection
+	colNum int
 }
 
-func min3(x, y, z uint8) (o uint8) {
-	o = x
-	if y < o {
-		o = y
-	}
-	if z < o {
-		o = z
-	}
-	return
+func newStore() *storage {
+	s := new(storage)
+	s.ids = make(map[string][]byte)
+	s.exp = list.New()
+	return s
 }
 
-func max3(x, y, z uint8) (o uint8) {
-	o = x
-	if y > o {
-		o = y
-	}
-	if z > o {
-		o = z
-	}
-	return
-}
+var store = newStore()
 
-func setRandomBrightness(c *image.NRGBAColor, max uint8) {
-	minc := min3(c.R, c.G, c.B)
-	maxc := max3(c.R, c.G, c.B)
-	if maxc > max {
-		return
-	}
-	n := rand.Intn(int(max-maxc)) - int(minc)
-	c.R = uint8(int(c.R) + n)
-	c.G = uint8(int(c.G) + n)
-	c.B = uint8(int(c.B) + n)
-}
-
-func fillWithCircles(img *image.NRGBA, n, maxradius int) {
-	maxx := img.Bounds().Max.X
-	maxy := img.Bounds().Max.Y
-	color := image.NRGBAColor{0, 0, 0x80, 0xFF}
-	for i := 0; i < n; i++ {
-		setRandomBrightness(&color, 255)
-		r := rand.Intn(maxradius-1)+1 
-		drawCircle(img, color, rand.Intn(maxx-r*2)+r, rand.Intn(maxy-r*2)+r, r)
-	}
-}
-
-func drawNumber(img *image.NRGBA, number []byte, x, y int, color image.NRGBAColor) {
-	skf := rand.Intn(SkewFactor)-SkewFactor/2
-	if skf < 0 {
-		x -= skf * NumberHeight
-	}
-	for y0 := 0; y0 < NumberHeight; y0++ {
-		for x0 := 0; x0 < NumberWidth; x0++ {
-			radius := rand.Intn(DotSize/2)+DotSize/2
-			addx := rand.Intn(radius/2)
-			addy := rand.Intn(radius/2)
-			if number[y0*NumberWidth+x0] == 1 {
-				drawCircle(img, color, x+x0*DotSize+DotSize+addx, y+y0*DotSize+DotSize+addy, radius)
-			}
-		}
-		x += skf
-	}
-}
-
-func drawNumbersToImage(ns []byte) {
-	img := image.NewNRGBA(NumberWidth*(DotSize+2)*len(ns)+DotSize, NumberHeight*DotSize+(DotSize*6))
-	for y := 0; y < img.Bounds().Max.Y; y++ {
-		for x := 0; x < img.Bounds().Max.X; x++ {
-			img.Set(x, y, image.NRGBAColor{0xFF, 0xFF, 0xFF, 0xFF})
-		}
-	}
-	fillWithCircles(img, 60, 3)
-	x := rand.Intn(DotSize)
+func NewImage(numbers []byte) *image.NRGBA {
+	w := numberWidth * (dotSize + 2) * len(numbers)
+	h := numberHeight * (dotSize + 5)
+	img := image.NewNRGBA(w, h)
+	color := image.NRGBAColor{uint8(rand.Intn(50)), uint8(rand.Intn(50)), uint8(rand.Intn(128)), 0xFF}
+	fillWithCircles(img, color, 40, 4)
+	x := rand.Intn(dotSize)
 	y := 0
-	color := image.NRGBAColor{0, 0, 0x80, 0xFF}
 	setRandomBrightness(&color, 180)
-	for _, n := range ns {
-		y = rand.Intn(DotSize*4)
-		drawNumber(img, numbers[n], x, y, color)
-		x += DotSize * NumberWidth + rand.Intn(SkewFactor)+3 
+	for _, n := range numbers {
+		y = rand.Intn(dotSize * 4)
+		drawNumber(img, font[n], x, y, color)
+		x += dotSize*numberWidth + rand.Intn(maxSkew) + 3
 	}
-	f, err := os.Create("captcha.png")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	png.Encode(f, img)
+	return img
 }
 
-func main() {
+func init() {
 	rand.Seed(time.Seconds())
+}
+
+func randomNumbers() []byte {
 	n := make([]byte, 6)
 	if _, err := io.ReadFull(crand.Reader, n); err != nil {
 		panic(err)
@@ -263,6 +72,65 @@ func main() {
 	for i := range n {
 		n[i] %= 10
 	}
-	drawNumbersToImage(n)
+	return n
 }
 
+func Encode(w io.Writer) (numbers []byte, err os.Error) {
+	numbers = randomNumbers()
+	err = png.Encode(w, NewImage(numbers))
+	return
+}
+
+func New() string {
+	ns := randomNumbers()
+	id := uniuri.New()
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	store.ids[id] = ns
+	store.exp.PushBack(expValue{time.Seconds(), id})
+	store.colNum++
+	if store.colNum > collectNum {
+		Collect()
+		store.colNum = 0
+	}
+	return id
+}
+
+func WriteImage(w io.Writer, id string) os.Error {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	ns, ok := store.ids[id]
+	if !ok {
+		return os.NewError("captcha id not found")
+	}
+	return png.Encode(w, NewImage(ns))
+}
+
+func Verify(w io.Writer, id string, ns []byte) bool {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	realns, ok := store.ids[id]
+	if !ok {
+		return false
+	}
+	store.ids[id] = nil, false
+	return bytes.Equal(ns, realns)
+}
+
+func Collect() {
+	now := time.Seconds()
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	for e := store.exp.Front(); e != nil; e = e.Next() {
+		ev, ok := e.Value.(expValue)
+		if !ok {
+			return
+		}
+		if ev.timestamp+expiration < now {
+			store.ids[ev.id] = nil, false
+			store.exp.Remove(e)
+		} else {
+			return
+		}
+	}
+}
