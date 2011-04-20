@@ -2,7 +2,6 @@ package captcha
 
 import (
 	"bytes"
-	"image/png"
 	"os"
 	"rand"
 	"time"
@@ -14,8 +13,6 @@ import (
 )
 
 const (
-	dotSize    = 6
-	maxSkew    = 3
 	expiration = 2 * 60 // 2 minutes
 	collectNum = 100    // number of items that triggers collection
 )
@@ -47,7 +44,7 @@ func init() {
 }
 
 func randomNumbers() []byte {
-	n := make([]byte, 6)
+	n := make([]byte, 3)
 	if _, err := io.ReadFull(crand.Reader, n); err != nil {
 		panic(err)
 	}
@@ -72,14 +69,14 @@ func New() string {
 	return id
 }
 
-func WriteImage(w io.Writer, id string) os.Error {
+func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
 	ns, ok := store.ids[id]
 	if !ok {
 		return os.NewError("captcha id not found")
 	}
-	return png.Encode(w, NewImage(ns))
+	return NewImage(ns, width, height).PNGEncode(w)
 }
 
 func Verify(w io.Writer, id string, ns []byte) bool {

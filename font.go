@@ -1,8 +1,8 @@
 package captcha
 
 const (
-	numberWidth  = 5
-	numberHeight = 8
+	fontWidth  = 5
+	fontHeight = 8
 )
 
 var font = [][]byte{
