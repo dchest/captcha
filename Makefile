@@ -4,7 +4,8 @@ TARG=github.com/dchest/captcha
 GOFILES=\
 	captcha.go\
 	draw.go\
-	font.go
+	font.go\
+	image.go
 
 include $(GOROOT)/src/Make.pkg
 

@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	captcha.Encode(os.Stdout)
+	captcha.EncodeNewImage(os.Stdout)
 }
