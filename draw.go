@@ -38,6 +38,7 @@ func drawCircle(img *image.NRGBA, color image.Color, x0, y0, radius int) {
 	}
 }
 
+
 func min3(x, y, z uint8) (o uint8) {
 	o = x
 	if y < o {
@@ -82,6 +83,21 @@ func fillWithCircles(img *image.NRGBA, color image.NRGBAColor, n, maxradius int)
 	}
 }
 
+func drawCirclesLine(img *image.NRGBA, color image.Color) {
+	r := 0
+	maxx := img.Bounds().Max.X
+	maxy := img.Bounds().Max.Y
+	y := rand.Intn(maxy/2+maxy/3) - rand.Intn(maxy/3)
+	for x := 0; x < maxx; x += r  {
+		r = rand.Intn(dotSize/2)
+		y += rand.Intn(3) - 1
+		if y <= 0 || y >= maxy {
+			y = rand.Intn(maxy/2) + rand.Intn(maxy/2)
+		}
+		drawCircle(img, color, x, y, r)
+	}
+}
+
 func drawNumber(img *image.NRGBA, number []byte, x, y int, color image.NRGBAColor) {
 	skf := rand.Intn(maxSkew) - maxSkew/2
 	if skf < 0 {
@@ -90,8 +106,8 @@ func drawNumber(img *image.NRGBA, number []byte, x, y int, color image.NRGBAColo
 	for y0 := 0; y0 < numberHeight; y0++ {
 		for x0 := 0; x0 < numberWidth; x0++ {
 			radius := rand.Intn(dotSize/2) + dotSize/2
-			addx := rand.Intn(radius / 2)
-			addy := rand.Intn(radius / 2)
+			addx := rand.Intn(radius / 4)
+			addy := rand.Intn(radius / 4)
 			if number[y0*numberWidth+x0] == 1 {
 				drawCircle(img, color, x+x0*dotSize+dotSize+addx,
 					y+y0*dotSize+dotSize+addy, radius)
