@@ -9,7 +9,10 @@ import (
 )
 
 const (
-	maxSkew = 3
+	maxSkew = 2
+	// Standard width and height for captcha image
+	StdWidth  = 300
+	StdHeight = 80
 )
 
 type CaptchaImage struct {
@@ -17,7 +20,52 @@ type CaptchaImage struct {
 	primaryColor image.NRGBAColor
 	numberWidth  int
 	numberHeight int
-	dotSize    int
+	dotSize      int
+}
+
+// NewImage returns a new captcha image of the given width and height with the
+// given slice of numbers, where each number is 0-9.
+func NewImage(numbers []byte, width, height int) *CaptchaImage {
+	img := new(CaptchaImage)
+	img.NRGBA = image.NewNRGBA(width, height)
+	img.primaryColor = image.NRGBAColor{uint8(rand.Intn(50)), uint8(rand.Intn(50)), uint8(rand.Intn(128)), 0xFF}
+	// We need some space, so calculate border
+	var border int
+	if width > height {
+		border = height / 5
+	} else {
+		border = width / 5
+	}
+	bwidth := width - border*2
+	bheight := height - border*2
+	img.calculateSizes(bwidth, bheight, len(numbers))
+	// Background 
+	img.fillWithCircles(10, img.dotSize)
+	maxx := width - (img.numberWidth+img.dotSize)*len(numbers) - img.dotSize
+	maxy := height - img.numberHeight - img.dotSize*2
+	x := rnd(img.dotSize*2, maxx)
+	y := rnd(img.dotSize*2, maxy)
+	setRandomBrightness(&img.primaryColor, 180)
+	for _, n := range numbers {
+		img.drawNumber(font[n], x, y)
+		x += img.numberWidth + img.dotSize
+	}
+	img.strikeThrough()
+	return img
+}
+
+// NewRandomImage generates random numbers and returns a new captcha image of
+// the given width and height with those numbers printed on it, and the numbers
+// themselves.
+func NewRandomImage(width, height int) (img *CaptchaImage, numbers []byte) {
+	numbers = randomNumbers()
+	img = NewImage(numbers, width, height)
+	return
+}
+
+// PNGEncode writes captcha image in PNG format into the given writer.
+func (img *CaptchaImage) PNGEncode(w io.Writer) os.Error {
+	return png.Encode(w, img)
 }
 
 func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
@@ -38,7 +86,7 @@ func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	if nh > h {
 		// Fit numbers based on height
 		nh = h
-		nw = fw/fh * nh
+		nw = fw / fh * nh
 	}
 	// Calculate dot size
 	img.dotSize = int(nh / fh)
@@ -46,43 +94,6 @@ func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	// to account for spacing between numbers
 	img.numberWidth = int(nw)
 	img.numberHeight = int(nh) - img.dotSize
-}
-
-func NewImage(numbers []byte, width, height int) *CaptchaImage {
-	img := new(CaptchaImage)
-	img.NRGBA = image.NewNRGBA(width, height)
-	img.primaryColor = image.NRGBAColor{uint8(rand.Intn(50)), uint8(rand.Intn(50)), uint8(rand.Intn(128)), 0xFF}
-	// We need some space, so calculate border
-	var border int
-	if width > height {
-		border = height/5
-	} else {
-		border = width/5
-	}
-	bwidth := width-border*2
-	bheight := height-border*2
-	img.calculateSizes(bwidth, bheight, len(numbers))
-	// Center numbers in image
-	x := width/2 - (img.numberWidth*len(numbers))/2 - img.dotSize
-	y := height/2 - img.numberHeight/2 + img.dotSize/2
-	setRandomBrightness(&img.primaryColor, 180)
-	for _, n := range numbers {
-		//y = rand.Intn(dotSize * 4)
-		img.drawNumber(font[n], x, y)
-		x += img.numberWidth + img.dotSize
-	}
-	//img.strikeThrough(img.primaryColor)
-	return img
-}
-
-func NewRandomImage(width, height int) (img *CaptchaImage, numbers []byte) {
-	numbers = randomNumbers()
-	img = NewImage(numbers, width, height)
-	return
-}
-
-func (img *CaptchaImage) PNGEncode(w io.Writer) os.Error {
-	return png.Encode(w, img)
 }
 
 func (img *CaptchaImage) drawHorizLine(color image.Color, fromX, toX, y int) {
@@ -117,7 +128,6 @@ func (img *CaptchaImage) drawCircle(color image.Color, x, y, radius int) {
 		img.drawHorizLine(color, x-yy, x+yy, y-xx)
 	}
 }
-
 
 func min3(x, y, z uint8) (o uint8) {
 	o = x
@@ -157,42 +167,38 @@ func rnd(from, to int) int {
 	return rand.Intn(to+1-from) + from
 }
 
-func (img *CaptchaImage) fillWithCircles(color image.NRGBAColor, n, maxradius int) {
+func (img *CaptchaImage) fillWithCircles(n, maxradius int) {
+	color := img.primaryColor
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
 	for i := 0; i < n; i++ {
 		setRandomBrightness(&color, 255)
 		r := rnd(1, maxradius)
-		img.drawCircle(color, rnd(r, maxx), rnd(r, maxy), r)
+		img.drawCircle(color, rnd(r, maxx-r), rnd(r, maxy-r), r)
 	}
 }
 
-// func (img *CaptchaImage) strikeThrough(color image.Color) {
-// 	r := 0
-// 	maxx := img.Bounds().Max.X
-// 	maxy := img.Bounds().Max.Y
-// 	y := rnd(maxy/3, maxy-maxy/3)
-// 	for x := 0; x < maxx; x += r {
-// 		r = rnd(1, dotSize/2-1)
-// 		y += rnd(-2, 2)
-// 		if y <= 0 || y >= maxy {
-// 			y = rnd(maxy/3, maxy-maxy/3)
-// 		}
-// 		img.drawCircle(color, x, y, r)
-// 	}
-// }
+func (img *CaptchaImage) strikeThrough() {
+	r := 0
+	maxx := img.Bounds().Max.X
+	maxy := img.Bounds().Max.Y
+	y := rnd(maxy/3, maxy-maxy/3)
+	for x := 0; x < maxx; x += r {
+		r = rnd(1, img.dotSize/2-1)
+		y += rnd(-img.dotSize/2, img.dotSize/2)
+		if y <= 0 || y >= maxy {
+			y = rnd(maxy/3, maxy-maxy/3)
+		}
+		img.drawCircle(img.primaryColor, x, y, r)
+	}
+}
 
 func (img *CaptchaImage) drawNumber(number []byte, x, y int) {
-	//skf := rand.Intn(maxSkew) - maxSkew/2
-	//if skf < 0 {
-	//	x -= skf * numberHeight
-	//}
-	//d := img.numberWidth / fontWidth // number height is ignored
-	//println(img.numberWidth)
-	minr := img.dotSize/2 // minumum radius
-	maxr := img.dotSize // maximum radius
-	// x += srad
-	// y += srad
+	skf := rand.Float64() * float64(rnd(-maxSkew, maxSkew))
+	xs := float64(x)
+	minr := img.dotSize / 2               // minumum radius
+	maxr := img.dotSize/2 + img.dotSize/4 // maximum radius
+	y += rnd(-minr, minr)
 	for yy := 0; yy < fontHeight; yy++ {
 		for xx := 0; xx < fontWidth; xx++ {
 			if number[yy*fontWidth+xx] != 1 {
@@ -200,10 +206,11 @@ func (img *CaptchaImage) drawNumber(number []byte, x, y int) {
 			}
 			// introduce random variations
 			or := rnd(minr, maxr)
-			ox := x + (xx * maxr) //+ rnd(0, or/2)
-			oy := y + (yy * maxr) //+ rnd(0, or/2)
+			ox := x + (xx * img.dotSize) + rnd(0, or/2)
+			oy := y + (yy * img.dotSize) + rnd(0, or/2)
 			img.drawCircle(img.primaryColor, ox, oy, or)
 		}
-		//x += skf
+		xs += skf
+		x = int(xs)
 	}
 }
