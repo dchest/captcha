@@ -2,12 +2,10 @@ package captcha
 
 import (
 	"bytes"
-	"os"
-	"rand"
-	"time"
-	crand "crypto/rand"
+	"crypto/rand"
 	"github.com/dchest/uniuri"
 	"io"
+	"os"
 )
 
 // Standard number of numbers in captcha
@@ -15,15 +13,11 @@ const StdLength = 6
 
 var globalStore = newStore()
 
-func init() {
-	rand.Seed(time.Seconds())
-}
-
 // randomNumbers return a byte slice of the given length containing random
 // numbers in range 0-9.
 func randomNumbers(length int) []byte {
 	n := make([]byte, length)
-	if _, err := io.ReadFull(crand.Reader, n); err != nil {
+	if _, err := io.ReadFull(rand.Reader, n); err != nil {
 		panic(err)
 	}
 	for i := range n {

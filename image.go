@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"rand"
+	"time"
 )
 
 const (
@@ -22,6 +23,10 @@ type CaptchaImage struct {
 	numWidth     int
 	numHeight    int
 	dotSize      int
+}
+
+func init() {
+	rand.Seed(time.Seconds())
 }
 
 // NewImage returns a new captcha image of the given width and height with the
