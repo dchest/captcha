@@ -41,15 +41,7 @@ func NewImage(numbers []byte, width, height int) *CaptchaImage {
 		0xFF,
 	}
 	// Calculate sizes
-	var border int
-	if width > height {
-		border = height / 5
-	} else {
-		border = width / 5
-	}
-	bwidth := width - border*2
-	bheight := height - border*2
-	img.calculateSizes(bwidth, bheight, len(numbers))
+	img.calculateSizes(width, height, len(numbers))
 	// Draw background (10 random circles of random brightness)
 	img.fillWithCircles(10, img.dotSize)
 	// Randomly position captcha inside the image
@@ -83,9 +75,15 @@ func (img *CaptchaImage) PNGEncode(w io.Writer) os.Error {
 
 func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	// Goal: fit all numbers inside the image.
+	var border int
+	if width > height {
+		border = height / 5
+	} else {
+		border = width / 5
+	}
 	// Convert everything to floats for calculations
-	w := float64(width)
-	h := float64(height)
+	w := float64(width-border*2)
+	h := float64(height-border*2)
 	// fw takes into account 1-dot spacing between numbers
 	fw := float64(fontWidth) + 1
 	fh := float64(fontHeight)
