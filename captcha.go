@@ -67,7 +67,7 @@ func WriteImage(w io.Writer, id string, width, height int) os.Error {
 // create the given captcha id.
 // 
 // The function deletes the captcha with the given id from the internal
-// storage, so that the same captcha can't be used anymore.
+// storage, so that the same captcha can't be verified anymore.
 func Verify(id string, numbers []byte) bool {
 	realns := globalStore.getNumbersClear(id)
 	if realns == nil {
