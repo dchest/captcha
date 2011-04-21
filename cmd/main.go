@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	img, _ := captcha.NewRandomImage(300, 80)
+	img, _ := captcha.NewRandomImage(230, 60)
 	img.PNGEncode(os.Stdout)
 }

@@ -44,7 +44,7 @@ func init() {
 }
 
 func randomNumbers() []byte {
-	n := make([]byte, 3)
+	n := make([]byte, 6)
 	if _, err := io.ReadFull(crand.Reader, n); err != nil {
 		panic(err)
 	}
