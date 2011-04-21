@@ -52,7 +52,7 @@ func NewImage(numbers []byte, width, height int) *CaptchaImage {
 	img.calculateSizes(bwidth, bheight, len(numbers))
 	// Draw background (10 random circles of random brightness)
 	img.fillWithCircles(10, img.dotSize)
-	// Randomly position captcha within image
+	// Randomly position captcha inside the image
 	maxx := width - (img.numWidth+img.dotSize)*len(numbers) - img.dotSize
 	maxy := height - img.numHeight - img.dotSize*2
 	x := rnd(img.dotSize*2, maxx)
@@ -83,7 +83,7 @@ func (img *CaptchaImage) PNGEncode(w io.Writer) os.Error {
 
 func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	// Goal: fit all numbers inside the image.
-	// Convert everything to floats for calculations.
+	// Convert everything to floats for calculations
 	w := float64(width)
 	h := float64(height)
 	// fw takes into account 1-dot spacing between numbers
@@ -103,7 +103,7 @@ func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	}
 	// Calculate dot size
 	img.dotSize = int(nh / fh)
-	// Save everything, making actual width smaller by 1 dot, to account
+	// Save everything, making the actual width smaller by 1 dot to account
 	// for spacing between numbers
 	img.numWidth = int(nw)
 	img.numHeight = int(nh) - img.dotSize
