@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	maxSkew = 2
 	// Standard width and height for captcha image
 	StdWidth  = 300
 	StdHeight = 80
+
+	maxSkew = 2
 )
 
 type CaptchaImage struct {
@@ -24,7 +25,7 @@ type CaptchaImage struct {
 }
 
 // NewImage returns a new captcha image of the given width and height with the
-// given slice of numbers, where each number is 0-9.
+// given slice of numbers, where each number must be in range 0-9.
 func NewImage(numbers []byte, width, height int) *CaptchaImage {
 	img := new(CaptchaImage)
 	img.NRGBA = image.NewNRGBA(width, height)

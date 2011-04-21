@@ -13,8 +13,12 @@ import (
 )
 
 const (
+	// Expiration time for captchas
 	Expiration = 2 * 60 // 2 minutes
-	CollectNum = 100    // number of items that triggers collection
+	// The number of captchas created that triggers garbage collection
+	CollectNum = 100
+	// The number of numbers to use in captcha
+	NumCount = 6
 )
 
 // expValue stores timestamp and id of captchas. It is used in a list inside
@@ -48,7 +52,7 @@ func init() {
 }
 
 func randomNumbers() []byte {
-	n := make([]byte, 6)
+	n := make([]byte, NumCount)
 	if _, err := io.ReadFull(crand.Reader, n); err != nil {
 		panic(err)
 	}
@@ -58,7 +62,8 @@ func randomNumbers() []byte {
 	return n
 }
 
-// New creates a new captcha, saves it in internal storage, and returns its id.
+// New creates a new captcha, saves it in the internal storage, and returns its
+// id.
 func New() string {
 	ns := randomNumbers()
 	id := uniuri.New()
@@ -67,7 +72,7 @@ func New() string {
 	store.ids[id] = ns
 	store.exp.PushBack(expValue{time.Seconds(), id})
 	store.colNum++
-	if store.colNum > collectNum {
+	if store.colNum > CollectNum {
 		Collect()
 		store.colNum = 0
 	}
@@ -86,8 +91,11 @@ func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	return NewImage(ns, width, height).PNGEncode(w)
 }
 
-// Verify returns true if the given numbers are the numbers that were used in
-// the given captcha id.
+// Verify returns true if the given numbers are the numbers that were used to
+// create the given captcha id.
+// 
+// The function deletes the captcha with the given id from the internal
+// storage, so that the same captcha can't be used anymore.
 func Verify(id string, numbers []byte) bool {
 	store.mu.Lock()
 	defer store.mu.Unlock()
@@ -99,7 +107,7 @@ func Verify(id string, numbers []byte) bool {
 	return bytes.Equal(numbers, realns)
 }
 
-// Collect garbage-collects expired and used captchas from the internal
+// Collect deletes expired and used captchas from the internal
 // storage. It is called automatically by New function every CollectNum
 // generated captchas, but still exported to enable freeing memory manually if
 // needed.
@@ -112,7 +120,7 @@ func Collect() {
 		if !ok {
 			return
 		}
-		if ev.timestamp+expiration < now {
+		if ev.timestamp+Expiration < now {
 			store.ids[ev.id] = nil, false
 			store.exp.Remove(e)
 		} else {
