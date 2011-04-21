@@ -13,15 +13,19 @@ import (
 )
 
 const (
-	expiration = 2 * 60 // 2 minutes
-	collectNum = 100    // number of items that triggers collection
+	Expiration = 2 * 60 // 2 minutes
+	CollectNum = 100    // number of items that triggers collection
 )
 
+// expValue stores timestamp and id of captchas. It is used in a list inside
+// storage for indexing generated captchas by timestamp to enable garbage
+// collection of expired captchas.
 type expValue struct {
 	timestamp int64
 	id        string
 }
 
+// storage is an internal storage for captcha ids and their values.
 type storage struct {
 	mu  sync.RWMutex
 	ids map[string][]byte
@@ -54,6 +58,7 @@ func randomNumbers() []byte {
 	return n
 }
 
+// New creates a new captcha, saves it in internal storage, and returns its id.
 func New() string {
 	ns := randomNumbers()
 	id := uniuri.New()
@@ -69,6 +74,8 @@ func New() string {
 	return id
 }
 
+// WriteImage writes PNG-encoded captcha image of the given width and height
+// with the given captcha id into the io.Writer.
 func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
@@ -79,7 +86,9 @@ func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	return NewImage(ns, width, height).PNGEncode(w)
 }
 
-func Verify(w io.Writer, id string, ns []byte) bool {
+// Verify returns true if the given numbers are the numbers that were used in
+// the given captcha id.
+func Verify(id string, numbers []byte) bool {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	realns, ok := store.ids[id]
@@ -87,9 +96,13 @@ func Verify(w io.Writer, id string, ns []byte) bool {
 		return false
 	}
 	store.ids[id] = nil, false
-	return bytes.Equal(ns, realns)
+	return bytes.Equal(numbers, realns)
 }
 
+// Collect garbage-collects expired and used captchas from the internal
+// storage. It is called automatically by New function every CollectNum
+// generated captchas, but still exported to enable freeing memory manually if
+// needed.
 func Collect() {
 	now := time.Seconds()
 	store.mu.Lock()
