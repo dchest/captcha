@@ -19,8 +19,8 @@ const (
 type CaptchaImage struct {
 	*image.NRGBA
 	primaryColor image.NRGBAColor
-	numberWidth  int
-	numberHeight int
+	numWidth     int
+	numHeight    int
 	dotSize      int
 }
 
@@ -29,8 +29,13 @@ type CaptchaImage struct {
 func NewImage(numbers []byte, width, height int) *CaptchaImage {
 	img := new(CaptchaImage)
 	img.NRGBA = image.NewNRGBA(width, height)
-	img.primaryColor = image.NRGBAColor{uint8(rand.Intn(50)), uint8(rand.Intn(50)), uint8(rand.Intn(128)), 0xFF}
-	// We need some space, so calculate border
+	img.primaryColor = image.NRGBAColor{
+		uint8(rand.Intn(129)),
+		uint8(rand.Intn(129)),
+		uint8(rand.Intn(129)),
+		0xFF,
+	}
+	// Calculate sizes
 	var border int
 	if width > height {
 		border = height / 5
@@ -40,17 +45,19 @@ func NewImage(numbers []byte, width, height int) *CaptchaImage {
 	bwidth := width - border*2
 	bheight := height - border*2
 	img.calculateSizes(bwidth, bheight, len(numbers))
-	// Background 
+	// Draw background (10 random circles of random brightness)
 	img.fillWithCircles(10, img.dotSize)
-	maxx := width - (img.numberWidth+img.dotSize)*len(numbers) - img.dotSize
-	maxy := height - img.numberHeight - img.dotSize*2
+	// Randomly position captcha within image
+	maxx := width - (img.numWidth+img.dotSize)*len(numbers) - img.dotSize
+	maxy := height - img.numHeight - img.dotSize*2
 	x := rnd(img.dotSize*2, maxx)
 	y := rnd(img.dotSize*2, maxy)
-	setRandomBrightness(&img.primaryColor, 180)
+	// Draw numbers
 	for _, n := range numbers {
 		img.drawNumber(font[n], x, y)
-		x += img.numberWidth + img.dotSize
+		x += img.numWidth + img.dotSize
 	}
+	// Draw strike-through line
 	img.strikeThrough()
 	return img
 }
@@ -70,18 +77,18 @@ func (img *CaptchaImage) PNGEncode(w io.Writer) os.Error {
 }
 
 func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
-	// Goal: fit all numbers into the image.
+	// Goal: fit all numbers inside the image.
 	// Convert everything to floats for calculations.
 	w := float64(width)
 	h := float64(height)
-	// fontWidth includes 1-dot spacing between numbers
+	// fw takes into account 1-dot spacing between numbers
 	fw := float64(fontWidth) + 1
 	fh := float64(fontHeight)
 	nc := float64(ncount)
-	// Calculate width of a sigle number if we only take into
-	// account the width
+	// Calculate the width of a single number taking into account only the
+	// width of the image
 	nw := w / nc
-	// Calculate the number height from this width
+	// Calculate the height of a number from this width
 	nh := nw * fh / fw
 	// Number height too large?
 	if nh > h {
@@ -91,10 +98,10 @@ func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	}
 	// Calculate dot size
 	img.dotSize = int(nh / fh)
-	// Save everything, making actual width smaller by 1 dot,
-	// to account for spacing between numbers
-	img.numberWidth = int(nw)
-	img.numberHeight = int(nh) - img.dotSize
+	// Save everything, making actual width smaller by 1 dot, to account
+	// for spacing between numbers
+	img.numWidth = int(nw)
+	img.numHeight = int(nh) - img.dotSize
 }
 
 func (img *CaptchaImage) drawHorizLine(color image.Color, fromX, toX, y int) {
@@ -128,44 +135,6 @@ func (img *CaptchaImage) drawCircle(color image.Color, x, y, radius int) {
 		img.drawHorizLine(color, x-yy, x+yy, y+xx)
 		img.drawHorizLine(color, x-yy, x+yy, y-xx)
 	}
-}
-
-func min3(x, y, z uint8) (o uint8) {
-	o = x
-	if y < o {
-		o = y
-	}
-	if z < o {
-		o = z
-	}
-	return
-}
-
-func max3(x, y, z uint8) (o uint8) {
-	o = x
-	if y > o {
-		o = y
-	}
-	if z > o {
-		o = z
-	}
-	return
-}
-
-func setRandomBrightness(c *image.NRGBAColor, max uint8) {
-	minc := min3(c.R, c.G, c.B)
-	maxc := max3(c.R, c.G, c.B)
-	if maxc > max {
-		return
-	}
-	n := rand.Intn(int(max-maxc)) - int(minc)
-	c.R = uint8(int(c.R) + n)
-	c.G = uint8(int(c.G) + n)
-	c.B = uint8(int(c.B) + n)
-}
-
-func rnd(from, to int) int {
-	return rand.Intn(to+1-from) + from
 }
 
 func (img *CaptchaImage) fillWithCircles(n, maxradius int) {
@@ -202,7 +171,7 @@ func (img *CaptchaImage) drawNumber(number []byte, x, y int) {
 	y += rnd(-minr, minr)
 	for yy := 0; yy < fontHeight; yy++ {
 		for xx := 0; xx < fontWidth; xx++ {
-			if number[yy*fontWidth+xx] != 1 {
+			if number[yy*fontWidth+xx] != blackChar {
 				continue
 			}
 			// introduce random variations
@@ -214,4 +183,43 @@ func (img *CaptchaImage) drawNumber(number []byte, x, y int) {
 		xs += skf
 		x = int(xs)
 	}
+}
+
+func setRandomBrightness(c *image.NRGBAColor, max uint8) {
+	minc := min3(c.R, c.G, c.B)
+	maxc := max3(c.R, c.G, c.B)
+	if maxc > max {
+		return
+	}
+	n := rand.Intn(int(max-maxc)) - int(minc)
+	c.R = uint8(int(c.R) + n)
+	c.G = uint8(int(c.G) + n)
+	c.B = uint8(int(c.B) + n)
+}
+
+func min3(x, y, z uint8) (o uint8) {
+	o = x
+	if y < o {
+		o = y
+	}
+	if z < o {
+		o = z
+	}
+	return
+}
+
+func max3(x, y, z uint8) (o uint8) {
+	o = x
+	if y > o {
+		o = y
+	}
+	if z > o {
+		o = z
+	}
+	return
+}
+
+// rnd returns a random number in range [from, to].
+func rnd(from, to int) int {
+	return rand.Intn(to+1-from) + from
 }

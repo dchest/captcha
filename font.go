@@ -3,6 +3,7 @@ package captcha
 const (
 	fontWidth  = 5
 	fontHeight = 8
+	blackChar  = 1
 )
 
 var font = [][]byte{
