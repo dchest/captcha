@@ -17,8 +17,6 @@ const (
 	Expiration = 2 * 60 // 2 minutes
 	// The number of captchas created that triggers garbage collection
 	CollectNum = 100
-	// The number of numbers to use in captcha
-	NumCount = 6
 )
 
 // expValue stores timestamp and id of captchas. It is used in a list inside
@@ -51,8 +49,8 @@ func init() {
 	rand.Seed(time.Seconds())
 }
 
-func randomNumbers() []byte {
-	n := make([]byte, NumCount)
+func randomNumbers(length int) []byte {
+	n := make([]byte, length)
 	if _, err := io.ReadFull(crand.Reader, n); err != nil {
 		panic(err)
 	}
@@ -62,10 +60,10 @@ func randomNumbers() []byte {
 	return n
 }
 
-// New creates a new captcha, saves it in the internal storage, and returns its
-// id.
-func New() string {
-	ns := randomNumbers()
+// New creates a new captcha of the given length, saves it in the internal
+// storage, and returns its id.
+func New(length int) string {
+	ns := randomNumbers(length)
 	id := uniuri.New()
 	store.mu.Lock()
 	defer store.mu.Unlock()

@@ -55,11 +55,11 @@ func NewImage(numbers []byte, width, height int) *CaptchaImage {
 	return img
 }
 
-// NewRandomImage generates random numbers and returns a new captcha image of
-// the given width and height with those numbers printed on it, and the numbers
-// themselves.
-func NewRandomImage(width, height int) (img *CaptchaImage, numbers []byte) {
-	numbers = randomNumbers()
+// NewRandomImage generates a sequence of random numbers with the given length,
+// and returns a new captcha image of the given width and height with generated
+// numbers printed on it, and the sequence of numbers itself.
+func NewRandomImage(length, width, height int) (img *CaptchaImage, numbers []byte) {
+	numbers = randomNumbers(length)
 	img = NewImage(numbers, width, height)
 	return
 }
