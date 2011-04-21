@@ -73,7 +73,7 @@ func New() string {
 	store.exp.PushBack(expValue{time.Seconds(), id})
 	store.colNum++
 	if store.colNum > CollectNum {
-		Collect()
+		go Collect()
 		store.colNum = 0
 	}
 	return id
