@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"rand"
-	"time"
 	"io"
 )
 
@@ -104,19 +103,22 @@ func reversedSound(a []byte) []byte {
 }
 
 func makeBackgroundSound(length int) []byte {
-	b := makeSilence(length) //makeStaticNoise(length, 8)
+	b := makeStaticNoise(length, 8)
 	for i := 0; i < length/(sampleRate/10); i++ {
 		snd := numberSounds[rand.Intn(10)]
 		snd = changeSpeed(reversedSound(snd), rndFloat64n(0.8, 1.4))
 		place := rand.Intn(len(b)-len(snd))
+		setSoundLevel(snd, rndFloat64n(0.5, 1.2))
 		mixSound(b[place:], snd)
 	}
-	setSoundLevel(b, 0.2)
+	setSoundLevel(b, rndFloat64n(0.2, 0.3))
 	return b
 }
 
 func randomizedNumSound(n byte) []byte {
-	return randomSpeed(numberSounds[n])
+	s := randomSpeed(numberSounds[n])
+	setSoundLevel(s, rndFloat64n(0.7, 1.3))
+	return s
 }
 
 func init() {
@@ -139,8 +141,8 @@ func NewAudio(numbers []byte) *CaptchaAudio {
 		nsdur += len(snd)
 		numsnd[i] = snd
 	}
-	// Intervals between numbers (including beginning and end)
-	intervals := make([]int, len(numbers)+2)
+	// Intervals between numbers (including beginning)
+	intervals := make([]int, len(numbers)+1)
 	intdur := 0
 	for i := range intervals {
 		// 1 to 3 seconds
@@ -154,11 +156,12 @@ func NewAudio(numbers []byte) *CaptchaAudio {
 	a := new(CaptchaAudio)
 	a.body = bytes.NewBuffer(nil)
 	// Prelude, three beeps
-	secondOfSilence := makeSilence(sampleRate)
-	for i := 0; i < 3; i++ {
-		a.body.Write(beepSound)
-		a.body.Write(secondOfSilence)
-	}
+	sil := makeSilence(sampleRate/5)
+	a.body.Write(beepSound)
+	a.body.Write(sil)
+	a.body.Write(beepSound)
+	a.body.Write(sil)
+	a.body.Write(beepSound)
 	// Numbers
 	pos := intervals[0]
 	for i, v := range numsnd {
