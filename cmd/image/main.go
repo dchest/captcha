@@ -7,5 +7,5 @@ import (
 
 func main() {
 	img, _ := captcha.NewRandomImage(captcha.StdLength, captcha.StdWidth, captcha.StdHeight)
-	img.PNGEncode(os.Stdout)
+	img.WriteTo(os.Stdout)
 }

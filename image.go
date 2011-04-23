@@ -68,9 +68,12 @@ func NewRandomImage(length, width, height int) (img *Image, numbers []byte) {
 	return
 }
 
-// PNGEncode writes captcha image in PNG format into the given writer.
-func (img *Image) PNGEncode(w io.Writer) os.Error {
-	return png.Encode(w, img)
+// WriteTo writes captcha image in PNG format into the given writer.
+//
+// Bug: while Image conforms to io.WriterTo interface, this function returns 0
+// instead of the actual bytes written because png.Encode doesn't report this.
+func (img *Image) WriteTo(w io.Writer) (int64, os.Error) {
+	return 0, png.Encode(w, img)
 }
 
 func (img *Image) calculateSizes(width, height, ncount int) {
