@@ -18,6 +18,89 @@ var (
 	endingBeepSound  []byte
 )
 
+func init() {
+	for _, v := range numberSounds {
+		if longestNumSndLen < len(v) {
+			longestNumSndLen = len(v)
+		}
+	}
+	endingBeepSound = changeSpeed(beepSound, 1.4)
+}
+
+type Audio struct {
+	body *bytes.Buffer
+}
+
+// NewImage returns a new audio captcha with the given slice of numbers, where
+// each number must be in range 0-9.
+func NewAudio(numbers []byte) *Audio {
+	numsnd := make([][]byte, len(numbers))
+	nsdur := 0
+	for i, n := range numbers {
+		snd := randomizedNumSound(n)
+		nsdur += len(snd)
+		numsnd[i] = snd
+	}
+	// Intervals between numbers (including beginning)
+	intervals := make([]int, len(numbers)+1)
+	intdur := 0
+	for i := range intervals {
+		// 1 to 3 seconds
+		dur := rnd(sampleRate, sampleRate*3)
+		intdur += dur
+		intervals[i] = dur
+	}
+	// Background noise
+	bg := makeBackgroundSound(longestNumSndLen*len(numbers) + intdur)
+	// --
+	a := new(Audio)
+	a.body = bytes.NewBuffer(nil)
+	// Prelude, three beeps
+	sil := makeSilence(sampleRate / 5)
+	a.body.Write(beepSound)
+	a.body.Write(sil)
+	a.body.Write(beepSound)
+	a.body.Write(sil)
+	a.body.Write(beepSound)
+	// Numbers
+	pos := intervals[0]
+	for i, v := range numsnd {
+		mixSound(bg[pos:], v)
+		pos += len(v) + intervals[i+1]
+	}
+	a.body.Write(bg)
+	// Ending
+	a.body.Write(endingBeepSound)
+	return a
+}
+
+// NewRandomAudio generates a sequence of random numbers with the given length,
+// and returns a new audio captcha with this numbers, and the sequence of
+// numbers itself.
+func NewRandomAudio(length int) (a *Audio, numbers []byte) {
+	numbers = randomNumbers(length)
+	a = NewAudio(numbers)
+	return
+}
+
+// WriteTo writes captcha audio in WAVE format into the given io.Writer, and
+// returns the number of bytes written and an error if any.
+func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
+	nn, err := w.Write(waveHeader)
+	n = int64(nn)
+	if err != nil {
+		return
+	}
+	err = binary.Write(w, binary.LittleEndian, uint32(a.body.Len()))
+	if err != nil {
+		return
+	}
+	nn += 4
+	n, err = a.body.WriteTo(w)
+	n += int64(nn)
+	return
+}
+
 // mixSound mixes src into dst. Dst must have length equal to or greater than
 // src length.
 func mixSound(dst, src []byte) {
@@ -122,85 +205,4 @@ func randomizedNumSound(n byte) []byte {
 	s := randomSpeed(numberSounds[n])
 	setSoundLevel(s, rndFloat64n(0.7, 1.3))
 	return s
-}
-
-func init() {
-	for _, v := range numberSounds {
-		if longestNumSndLen < len(v) {
-			longestNumSndLen = len(v)
-		}
-	}
-	endingBeepSound = changeSpeed(beepSound, 1.4)
-}
-
-type Audio struct {
-	body *bytes.Buffer
-}
-
-func NewAudio(numbers []byte) *Audio {
-	numsnd := make([][]byte, len(numbers))
-	nsdur := 0
-	for i, n := range numbers {
-		snd := randomizedNumSound(n)
-		nsdur += len(snd)
-		numsnd[i] = snd
-	}
-	// Intervals between numbers (including beginning)
-	intervals := make([]int, len(numbers)+1)
-	intdur := 0
-	for i := range intervals {
-		// 1 to 3 seconds
-		dur := rnd(sampleRate, sampleRate*3)
-		intdur += dur
-		intervals[i] = dur
-	}
-	// Background noise
-	bg := makeBackgroundSound(longestNumSndLen*len(numbers) + intdur)
-	// --
-	a := new(Audio)
-	a.body = bytes.NewBuffer(nil)
-	// Prelude, three beeps
-	sil := makeSilence(sampleRate / 5)
-	a.body.Write(beepSound)
-	a.body.Write(sil)
-	a.body.Write(beepSound)
-	a.body.Write(sil)
-	a.body.Write(beepSound)
-	// Numbers
-	pos := intervals[0]
-	for i, v := range numsnd {
-		mixSound(bg[pos:], v)
-		pos += len(v) + intervals[i+1]
-	}
-	a.body.Write(bg)
-	// Ending
-	a.body.Write(endingBeepSound)
-	return a
-}
-
-// NewRandomAudio generates a sequence of random numbers with the given length,
-// and returns a new audio captcha with this numbers, and the sequence of
-// numbers itself.
-func NewRandomAudio(length int) (a *Audio, numbers []byte) {
-	numbers = randomNumbers(length)
-	a = NewAudio(numbers)
-	return
-}
-
-// WriteTo writes captcha audio in WAVE format into the given io.Writer, and
-// returns the number of bytes written and an error if any.
-func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
-	nn, err := w.Write(waveHeader)
-	n = int64(nn)
-	if err != nil {
-		return
-	}
-	err = binary.Write(w, binary.LittleEndian, uint32(a.body.Len()))
-	if err != nil {
-		return
-	}
-	nn += 4
-	n, err = a.body.WriteTo(w)
-	n += int64(nn)
-	return
 }

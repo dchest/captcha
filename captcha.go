@@ -34,21 +34,23 @@ func New(length int) (id string) {
 	return
 }
 
-// Reload generates new numbers for the given captcha id.  This function does
-// nothing if there is no captcha with the given id.
+// Reload generates and remembers new numbers for the given captcha id.  This
+// function returns false if there is no captcha with the given id.
 //
-// After calling this function, the image presented to a user must be refreshed
-// to show the new captcha (WriteImage will write the new one).
-func Reload(id string) {
+// After calling this function, the image or audio presented to a user must be
+// refreshed to show the new captcha representation (WriteImage and WriteAudio
+// will write the new one).
+func Reload(id string) bool {
 	oldns := globalStore.getNumbers(id)
 	if oldns == nil {
-		return
+		return false
 	}
 	globalStore.saveCaptcha(id, randomNumbers(len(oldns)))
+	return true
 }
 
-// WriteImage writes PNG-encoded captcha image of the given width and height
-// with the given captcha id into the io.Writer.
+// WriteImage writes PNG-encoded image representation of the captcha with the
+// given id. The image will have the given width and height.
 func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	ns := globalStore.getNumbers(id)
 	if ns == nil {
@@ -58,8 +60,8 @@ func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	return err
 }
 
-// WriteAudio writes WAV-encoded audio captcha with the given captcha id into
-// the given io.Writer.
+// WriteAudio writes WAV-encoded audio representation of the captcha with the
+// given id.
 func WriteAudio(w io.Writer, id string) os.Error {
 	ns := globalStore.getNumbers(id)
 	if ns == nil {
