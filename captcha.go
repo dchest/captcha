@@ -57,6 +57,17 @@ func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	return NewImage(ns, width, height).PNGEncode(w)
 }
 
+// WriteAudio writes WAV-encoded audio captcha with the given captcha id into
+// the given io.Writer.
+func WriteAudio(w io.Writer, id string) os.Error {
+	ns := globalStore.getNumbers(id)
+	if ns == nil {
+		return os.NewError("captcha id not found")
+	}
+	_, err := NewAudio(ns).WriteTo(w)
+	return err
+}
+
 // Verify returns true if the given numbers are the numbers that were used to
 // create the given captcha id.
 // 
