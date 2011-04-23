@@ -1,4 +1,4 @@
-// Generates pcm.go from WAVE files [0-9].wav
+// Generates ../sounds.go from WAVE files
 package main
 
 import (

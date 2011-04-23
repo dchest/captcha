@@ -12,8 +12,11 @@ import (
 
 const sampleRate = 8000
 
-// Length of the longest number sound
-var longestNumSndLen int
+var (
+	// Length of the longest number sound
+	longestNumSndLen int
+	endingBeepSound  []byte
+)
 
 // mixSound mixes src into dst. Dst must have length equal to or greater than
 // src length.
@@ -22,7 +25,7 @@ func mixSound(dst, src []byte) {
 		av := int(v)
 		bv := int(dst[i])
 		if av < 128 && bv < 128 {
-			dst[i] = byte(av*bv/128)
+			dst[i] = byte(av * bv / 128)
 		} else {
 			dst[i] = byte(2*(av+bv) - av*bv/128 - 256)
 		}
@@ -64,7 +67,7 @@ func changeSpeed(a []byte, pitch float64) []byte {
 
 // rndFloat64n returns a random float64 number in range [from, to].
 func rndFloat64n(from, to float64) float64 {
-	return (to-from)*rand.Float64()+from
+	return (to-from)*rand.Float64() + from
 }
 
 func randomSpeed(a []byte) []byte {
@@ -107,7 +110,7 @@ func makeBackgroundSound(length int) []byte {
 	for i := 0; i < length/(sampleRate/10); i++ {
 		snd := numberSounds[rand.Intn(10)]
 		snd = changeSpeed(reversedSound(snd), rndFloat64n(0.8, 1.4))
-		place := rand.Intn(len(b)-len(snd))
+		place := rand.Intn(len(b) - len(snd))
 		setSoundLevel(snd, rndFloat64n(0.5, 1.2))
 		mixSound(b[place:], snd)
 	}
@@ -127,6 +130,7 @@ func init() {
 			longestNumSndLen = len(v)
 		}
 	}
+	endingBeepSound = changeSpeed(beepSound, 1.4)
 }
 
 type CaptchaAudio struct {
@@ -151,12 +155,12 @@ func NewAudio(numbers []byte) *CaptchaAudio {
 		intervals[i] = dur
 	}
 	// Background noise
-	bg := makeBackgroundSound(longestNumSndLen*len(numbers)+intdur)
+	bg := makeBackgroundSound(longestNumSndLen*len(numbers) + intdur)
 	// --
 	a := new(CaptchaAudio)
 	a.body = bytes.NewBuffer(nil)
 	// Prelude, three beeps
-	sil := makeSilence(sampleRate/5)
+	sil := makeSilence(sampleRate / 5)
 	a.body.Write(beepSound)
 	a.body.Write(sil)
 	a.body.Write(beepSound)
@@ -170,7 +174,7 @@ func NewAudio(numbers []byte) *CaptchaAudio {
 	}
 	a.body.Write(bg)
 	// Ending
-	a.body.Write(changeSpeed(beepSound, 1.4))
+	a.body.Write(endingBeepSound)
 	return a
 }
 
