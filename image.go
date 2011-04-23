@@ -17,7 +17,7 @@ const (
 	maxSkew = 2
 )
 
-type CaptchaImage struct {
+type Image struct {
 	*image.NRGBA
 	primaryColor image.NRGBAColor
 	numWidth     int
@@ -31,8 +31,8 @@ func init() {
 
 // NewImage returns a new captcha image of the given width and height with the
 // given slice of numbers, where each number must be in range 0-9.
-func NewImage(numbers []byte, width, height int) *CaptchaImage {
-	img := new(CaptchaImage)
+func NewImage(numbers []byte, width, height int) *Image {
+	img := new(Image)
 	img.NRGBA = image.NewNRGBA(width, height)
 	img.primaryColor = image.NRGBAColor{
 		uint8(rand.Intn(129)),
@@ -62,18 +62,18 @@ func NewImage(numbers []byte, width, height int) *CaptchaImage {
 // NewRandomImage generates a sequence of random numbers with the given length,
 // and returns a new captcha image of the given width and height with generated
 // numbers printed on it, and the sequence of numbers itself.
-func NewRandomImage(length, width, height int) (img *CaptchaImage, numbers []byte) {
+func NewRandomImage(length, width, height int) (img *Image, numbers []byte) {
 	numbers = randomNumbers(length)
 	img = NewImage(numbers, width, height)
 	return
 }
 
 // PNGEncode writes captcha image in PNG format into the given writer.
-func (img *CaptchaImage) PNGEncode(w io.Writer) os.Error {
+func (img *Image) PNGEncode(w io.Writer) os.Error {
 	return png.Encode(w, img)
 }
 
-func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
+func (img *Image) calculateSizes(width, height, ncount int) {
 	// Goal: fit all numbers inside the image.
 	var border int
 	if width > height {
@@ -107,13 +107,13 @@ func (img *CaptchaImage) calculateSizes(width, height, ncount int) {
 	img.numHeight = int(nh) - img.dotSize
 }
 
-func (img *CaptchaImage) drawHorizLine(color image.Color, fromX, toX, y int) {
+func (img *Image) drawHorizLine(color image.Color, fromX, toX, y int) {
 	for x := fromX; x <= toX; x++ {
 		img.Set(x, y, color)
 	}
 }
 
-func (img *CaptchaImage) drawCircle(color image.Color, x, y, radius int) {
+func (img *Image) drawCircle(color image.Color, x, y, radius int) {
 	f := 1 - radius
 	dfx := 1
 	dfy := -2 * radius
@@ -140,7 +140,7 @@ func (img *CaptchaImage) drawCircle(color image.Color, x, y, radius int) {
 	}
 }
 
-func (img *CaptchaImage) fillWithCircles(n, maxradius int) {
+func (img *Image) fillWithCircles(n, maxradius int) {
 	color := img.primaryColor
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
@@ -151,7 +151,7 @@ func (img *CaptchaImage) fillWithCircles(n, maxradius int) {
 	}
 }
 
-func (img *CaptchaImage) strikeThrough() {
+func (img *Image) strikeThrough() {
 	r := 0
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
@@ -166,7 +166,7 @@ func (img *CaptchaImage) strikeThrough() {
 	}
 }
 
-func (img *CaptchaImage) drawNumber(number []byte, x, y int) {
+func (img *Image) drawNumber(number []byte, x, y int) {
 	skf := rand.Float64() * float64(rnd(-maxSkew, maxSkew))
 	xs := float64(x)
 	minr := img.dotSize / 2               // minumum radius

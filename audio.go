@@ -133,11 +133,11 @@ func init() {
 	endingBeepSound = changeSpeed(beepSound, 1.4)
 }
 
-type CaptchaAudio struct {
+type Audio struct {
 	body *bytes.Buffer
 }
 
-func NewAudio(numbers []byte) *CaptchaAudio {
+func NewAudio(numbers []byte) *Audio {
 	numsnd := make([][]byte, len(numbers))
 	nsdur := 0
 	for i, n := range numbers {
@@ -157,7 +157,7 @@ func NewAudio(numbers []byte) *CaptchaAudio {
 	// Background noise
 	bg := makeBackgroundSound(longestNumSndLen*len(numbers) + intdur)
 	// --
-	a := new(CaptchaAudio)
+	a := new(Audio)
 	a.body = bytes.NewBuffer(nil)
 	// Prelude, three beeps
 	sil := makeSilence(sampleRate / 5)
@@ -179,7 +179,7 @@ func NewAudio(numbers []byte) *CaptchaAudio {
 }
 
 // WriteTo writes captcha audio in WAVE format.
-func (a *CaptchaAudio) WriteTo(w io.Writer) (n int64, err os.Error) {
+func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
 	nn, err := w.Write(waveHeader)
 	n = int64(nn)
 	if err != nil {
