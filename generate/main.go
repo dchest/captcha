@@ -26,7 +26,9 @@ func writeVar(w io.Writer, b []byte, prefix string) {
 			}
 			i = 0
 		} else {
-			fmt.Fprintf(w, " ")
+			if j != len(b)-1 {
+				fmt.Fprintf(w, " ")
+			}
 		}
 	}
 	if i > 0 {
