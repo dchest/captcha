@@ -10,7 +10,7 @@ import (
 	"io"
 )
 
-const sampleRate = 8000
+const sampleRate = 8000 // Hz
 
 var (
 	// Length of the longest number sound
@@ -54,9 +54,10 @@ func NewAudio(numbers []byte) *Audio {
 	bg := makeBackgroundSound(longestNumSndLen*len(numbers) + intdur)
 	// --
 	a := new(Audio)
-	a.body = bytes.NewBuffer(nil)
-	// Prelude, three beeps
 	sil := makeSilence(sampleRate / 5)
+	bufcap := 3*len(beepSound) + 2*len(sil) + len(bg) + len(endingBeepSound)
+	a.body = bytes.NewBuffer(make([]byte, 0, bufcap))
+	// Prelude, three beeps
 	a.body.Write(beepSound)
 	a.body.Write(sil)
 	a.body.Write(beepSound)
@@ -166,7 +167,7 @@ func makeSilence(length int) []byte {
 	return b
 }
 
-func makeStaticNoise(length int, level uint8) []byte {
+func makeWhiteNoise(length int, level uint8) []byte {
 	noise := make([]byte, length)
 	_, err := io.ReadFull(crand.Reader, noise)
 	if err != nil {
@@ -180,16 +181,16 @@ func makeStaticNoise(length int, level uint8) []byte {
 }
 
 func reversedSound(a []byte) []byte {
-	ln := len(a)
-	b := make([]byte, ln)
+	n := len(a)
+	b := make([]byte, n)
 	for i, v := range a {
-		b[ln-1-i] = v
+		b[n-1-i] = v
 	}
 	return b
 }
 
 func makeBackgroundSound(length int) []byte {
-	b := makeStaticNoise(length, 8)
+	b := makeWhiteNoise(length, 8)
 	for i := 0; i < length/(sampleRate/10); i++ {
 		snd := numberSounds[rand.Intn(10)]
 		snd = changeSpeed(reversedSound(snd), rndFloat64n(0.8, 1.4))
