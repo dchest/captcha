@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// Standard width and height for captcha image
+	// Standard width and height of a captcha image.
 	StdWidth  = 300
 	StdHeight = 80
 
@@ -30,8 +30,8 @@ func init() {
 }
 
 // NewImage returns a new captcha image of the given width and height with the
-// given slice of numbers, where each number must be in range 0-9.
-func NewImage(numbers []byte, width, height int) *Image {
+// given digits, where each digit must be in range 0-9.
+func NewImage(digits []byte, width, height int) *Image {
 	img := new(Image)
 	img.NRGBA = image.NewNRGBA(width, height)
 	img.primaryColor = image.NRGBAColor{
@@ -40,31 +40,31 @@ func NewImage(numbers []byte, width, height int) *Image {
 		uint8(rand.Intn(129)),
 		0xFF,
 	}
-	// Calculate sizes
-	img.calculateSizes(width, height, len(numbers))
-	// Draw background (10 random circles of random brightness)
+	// Calculate sizes.
+	img.calculateSizes(width, height, len(digits))
+	// Draw background (10 random circles of random brightness).
 	img.fillWithCircles(10, img.dotSize)
-	// Randomly position captcha inside the image
-	maxx := width - (img.numWidth+img.dotSize)*len(numbers) - img.dotSize
+	// Randomly position captcha inside the image.
+	maxx := width - (img.numWidth+img.dotSize)*len(digits) - img.dotSize
 	maxy := height - img.numHeight - img.dotSize*2
 	x := rnd(img.dotSize*2, maxx)
 	y := rnd(img.dotSize*2, maxy)
-	// Draw numbers
-	for _, n := range numbers {
-		img.drawNumber(font[n], x, y)
+	// Draw digits.
+	for _, n := range digits {
+		img.drawDigit(font[n], x, y)
 		x += img.numWidth + img.dotSize
 	}
-	// Draw strike-through line
+	// Draw strike-through line.
 	img.strikeThrough()
 	return img
 }
 
-// NewRandomImage generates a sequence of random numbers with the given length,
+// NewRandomImage generates a sequence of random digits with the given length,
 // and returns a new captcha image of the given width and height with generated
-// numbers printed on it, and the sequence of numbers itself.
-func NewRandomImage(length, width, height int) (img *Image, numbers []byte) {
-	numbers = randomNumbers(length)
-	img = NewImage(numbers, width, height)
+// digits printed on it, and the sequence of digits itself.
+func NewRandomImage(length, width, height int) (img *Image, digits []byte) {
+	digits = randomDigits(length)
+	img = NewImage(digits, width, height)
 	return
 }
 
@@ -77,35 +77,35 @@ func (img *Image) WriteTo(w io.Writer) (int64, os.Error) {
 }
 
 func (img *Image) calculateSizes(width, height, ncount int) {
-	// Goal: fit all numbers inside the image.
+	// Goal: fit all digits inside the image.
 	var border int
 	if width > height {
 		border = height / 5
 	} else {
 		border = width / 5
 	}
-	// Convert everything to floats for calculations
-	w := float64(width-border*2)
-	h := float64(height-border*2)
-	// fw takes into account 1-dot spacing between numbers
+	// Convert everything to floats for calculations.
+	w := float64(width - border*2)
+	h := float64(height - border*2)
+	// fw takes into account 1-dot spacing between digits.
 	fw := float64(fontWidth) + 1
 	fh := float64(fontHeight)
 	nc := float64(ncount)
-	// Calculate the width of a single number taking into account only the
-	// width of the image
+	// Calculate the width of a single digit taking into account only the
+	// width of the image.
 	nw := w / nc
-	// Calculate the height of a number from this width
+	// Calculate the height of a digit from this width.
 	nh := nw * fh / fw
-	// Number height too large?
+	// Digit too high?
 	if nh > h {
-		// Fit numbers based on height
+		// Fit digits based on height.
 		nh = h
 		nw = fw / fh * nh
 	}
-	// Calculate dot size
+	// Calculate dot size.
 	img.dotSize = int(nh / fh)
 	// Save everything, making the actual width smaller by 1 dot to account
-	// for spacing between numbers
+	// for spacing between digits.
 	img.numWidth = int(nw)
 	img.numHeight = int(nh) - img.dotSize
 }
@@ -169,7 +169,7 @@ func (img *Image) strikeThrough() {
 	}
 }
 
-func (img *Image) drawNumber(number []byte, x, y int) {
+func (img *Image) drawDigit(digit []byte, x, y int) {
 	skf := rand.Float64() * float64(rnd(-maxSkew, maxSkew))
 	xs := float64(x)
 	minr := img.dotSize / 2               // minumum radius
@@ -177,13 +177,14 @@ func (img *Image) drawNumber(number []byte, x, y int) {
 	y += rnd(-minr, minr)
 	for yy := 0; yy < fontHeight; yy++ {
 		for xx := 0; xx < fontWidth; xx++ {
-			if number[yy*fontWidth+xx] != blackChar {
+			if digit[yy*fontWidth+xx] != blackChar {
 				continue
 			}
-			// introduce random variations
+			// Introduce random variations.
 			or := rnd(minr, maxr)
 			ox := x + (xx * img.dotSize) + rnd(0, or/2)
 			oy := y + (yy * img.dotSize) + rnd(0, or/2)
+
 			img.drawCircle(img.primaryColor, ox, oy, or)
 		}
 		xs += skf

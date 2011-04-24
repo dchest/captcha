@@ -38,11 +38,11 @@ func newStore() *store {
 	return s
 }
 
-// saveCaptcha saves the captcha id and the corresponding numbers.
-func (s *store) saveCaptcha(id string, ns []byte) {
+// saveCaptcha saves the captcha id and the corresponding digits.
+func (s *store) saveCaptcha(id string, digits []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.ids[id] = ns
+	s.ids[id] = digits
 	s.exp.PushBack(expValue{time.Seconds(), id})
 	s.colNum++
 	if s.colNum > CollectNum {
@@ -51,20 +51,20 @@ func (s *store) saveCaptcha(id string, ns []byte) {
 	}
 }
 
-// getNumbers returns the numbers for the given id.
-func (s *store) getNumbers(id string) (ns []byte) {
+// getDigits returns the digits for the given id.
+func (s *store) getDigits(id string) (digits []byte) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	ns, _ = s.ids[id]
+	digits, _ = s.ids[id]
 	return
 }
 
-// getNumbersClear returns the numbers for the given id, and removes them from
+// getDigitsClear returns the digits for the given id, and removes them from
 // the store.
-func (s *store) getNumbersClear(id string) (ns []byte) {
+func (s *store) getDigitsClear(id string) (digits []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	ns, ok := s.ids[id]
+	digits, ok := s.ids[id]
 	if !ok {
 		return
 	}

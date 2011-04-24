@@ -46,8 +46,8 @@ func writeSingle(pcm io.Writer, name string) {
 	fmt.Fprintf(pcm, "}\n")
 }
 
-func writeNumbers(pcm io.Writer) {
-	fmt.Fprintf(pcm, "var numberSounds = [][]byte{\n")
+func writeDigitSounds(pcm io.Writer) {
+	fmt.Fprintf(pcm, "var digitSounds = [][]byte{\n")
 	for i := 0; i <= 9; i++ {
 		fmt.Fprintf(pcm, "\t{ // %d\n\t\t", i)
 		writeFileRep(pcm, fmt.Sprintf("%d.wav", i), "\t\t")
@@ -76,6 +76,6 @@ var waveHeader = []byte{
 // Byte slices contain raw 8 kHz unsigned 8-bit PCM data (without wav header).
 
 `)
-	writeNumbers(pcm)
+	writeDigitSounds(pcm)
 	writeSingle(pcm, "beep")
 }
