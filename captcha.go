@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"crypto/rand"
 	"github.com/dchest/uniuri"
+	"http"
 	"io"
 	"os"
+	"path"
 )
 
 const (
@@ -94,12 +96,55 @@ func Verify(id string, digits []byte) bool {
 	return bytes.Equal(digits, reald)
 }
 
-// Collect deletes expired and used captchas from the internal
-// storage. It is called automatically by New function every CollectNum
-// generated captchas, but still exported to enable freeing memory manually if
-// needed.
+// Collect deletes expired or used captchas from the internal storage. It is
+// called automatically by New function every CollectNum generated captchas,
+// but still exported to enable freeing memory manually if needed.
 //
 // Collection is launched in a new goroutine.
 func Collect() {
 	go globalStore.collect()
+}
+
+type captchaHandler struct {
+	imgWidth  int
+	imgHeight int
+}
+
+// CaptchaServer returns a handler that serves HTTP requests with image or
+// audio representations of captchas. Image dimensions are accepted as
+// arguments. The server decides which captcha to serve based on the last URL
+// path component: file name part must contain a captcha id, file extension —
+// its format (PNG or WAV).
+//
+// For example, for file name "B9QTvDV1RXbVJ3Ac.png" it serves an image captcha
+// with id "B9QTvDV1RXbVJ3Ac", and for "B9QTvDV1RXbVJ3Ac.wav" it serves the
+// same captcha in audio format.
+func Server(w, h int) http.Handler { return &captchaHandler{w, h} }
+
+func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	_, file := path.Split(r.URL.Path)
+	ext := path.Ext(file)
+	id := file[:len(file)-len(ext)]
+	if ext == "" || id == "" {
+		http.NotFound(w, r)
+		return
+	}
+	var err os.Error
+	switch ext {
+	case ".png", ".PNG":
+		w.Header().Set("Content-Type", "image/png")
+		err = WriteImage(w, id, h.imgWidth, h.imgHeight)
+	case ".wav", ".WAV":
+		w.Header().Set("Content-Type", "audio/x-wav")
+		err = WriteAudio(w, id)
+	default:
+		err = ErrNotFound
+	}
+	if err != nil {
+		if err == ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, "error serving captcha", http.StatusInternalServerError)
+	}
 }
