@@ -13,9 +13,9 @@ const StdLength = 6
 
 var globalStore = newStore()
 
-// randomDigits return a byte slice of the given length containing random
+// RandomDigits returns a byte slice of the given length containing random
 // digits in range 0-9.
-func randomDigits(length int) []byte {
+func RandomDigits(length int) []byte {
 	d := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, d); err != nil {
 		panic(err)
@@ -30,7 +30,7 @@ func randomDigits(length int) []byte {
 // storage, and returns its id.
 func New(length int) (id string) {
 	id = uniuri.New()
-	globalStore.saveCaptcha(id, randomDigits(length))
+	globalStore.saveCaptcha(id, RandomDigits(length))
 	return
 }
 
@@ -45,7 +45,7 @@ func Reload(id string) bool {
 	if old == nil {
 		return false
 	}
-	globalStore.saveCaptcha(id, randomDigits(len(old)))
+	globalStore.saveCaptcha(id, RandomDigits(len(old)))
 	return true
 }
 

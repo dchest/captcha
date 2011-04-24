@@ -74,15 +74,6 @@ func NewAudio(digits []byte) *Audio {
 	return a
 }
 
-// NewRandomAudio generates a sequence of random digits with the given length,
-// and returns a new audio captcha with these digits, and the sequence of
-// digits itself.
-func NewRandomAudio(length int) (a *Audio, digits []byte) {
-	digits = randomDigits(length)
-	a = NewAudio(digits)
-	return
-}
-
 // WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 // returns the number of bytes written and an error if any.
 func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {

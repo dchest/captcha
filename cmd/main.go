@@ -35,16 +35,16 @@ func main() {
 	}
 	defer f.Close()
 	var w io.WriterTo
-	var ns []byte
+	d := captcha.RandomDigits(*flagLen)
 	switch {
 	case *flagAudio:
-		w, ns = captcha.NewRandomAudio(*flagLen)
+		w = captcha.NewAudio(d)
 	case *flagImage:
-		w, ns = captcha.NewRandomImage(*flagLen, *flagImgW, *flagImgH)
+		w = captcha.NewImage(d, *flagImgW, *flagImgH)
 	}
 	_, err = w.WriteTo(f)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	fmt.Println(ns)
+	fmt.Println(d)
 }

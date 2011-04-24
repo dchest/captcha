@@ -59,15 +59,6 @@ func NewImage(digits []byte, width, height int) *Image {
 	return img
 }
 
-// NewRandomImage generates a sequence of random digits with the given length,
-// and returns a new captcha image of the given width and height with generated
-// digits printed on it, and the sequence of digits itself.
-func NewRandomImage(length, width, height int) (img *Image, digits []byte) {
-	digits = randomDigits(length)
-	img = NewImage(digits, width, height)
-	return
-}
-
 // WriteTo writes captcha image in PNG format into the given writer.
 //
 // Bug: while Image conforms to io.WriterTo interface, this function returns 0
