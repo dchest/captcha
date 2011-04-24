@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-const (
-	// Expiration time for captchas
-	Expiration = 2 * 60 // 2 minutes
-	// The number of captchas created that triggers garbage collection
-	CollectNum = 100
-)
-
 // expValue stores timestamp and id of captchas. It is used in a list inside
 // store for indexing generated captchas by timestamp to enable garbage
 // collection of expired captchas.
@@ -26,15 +19,21 @@ type store struct {
 	mu  sync.RWMutex
 	ids map[string][]byte
 	exp *list.List
-	// Number of items stored after last collection
-	colNum int
+	// Number of items stored after last collection.
+	numStored int
+	// Number of saved items that triggers collection.
+	collectNum int
+	// Expiration time of captchas.
+	expiration int64
 }
 
 // newStore initializes and returns a new store.
-func newStore() *store {
+func newStore(collectNum int, expiration int64) *store {
 	s := new(store)
 	s.ids = make(map[string][]byte)
 	s.exp = list.New()
+	s.collectNum = collectNum
+	s.expiration = expiration
 	return s
 }
 
@@ -44,10 +43,10 @@ func (s *store) saveCaptcha(id string, digits []byte) {
 	defer s.mu.Unlock()
 	s.ids[id] = digits
 	s.exp.PushBack(expValue{time.Seconds(), id})
-	s.colNum++
-	if s.colNum > CollectNum {
+	s.numStored++
+	if s.numStored > s.collectNum {
 		go s.collect()
-		s.colNum = 0
+		s.numStored = 0
 	}
 }
 
@@ -85,7 +84,7 @@ func (s *store) collect() {
 		if !ok {
 			return
 		}
-		if ev.timestamp+Expiration < now {
+		if ev.timestamp+s.expiration < now {
 			s.ids[ev.id] = nil, false
 			s.exp.Remove(e)
 		} else {
