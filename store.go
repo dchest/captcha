@@ -40,13 +40,12 @@ func newStore(collectNum int, expiration int64) *store {
 // saveCaptcha saves the captcha id and the corresponding digits.
 func (s *store) saveCaptcha(id string, digits []byte) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.ids[id] = digits
 	s.exp.PushBack(expValue{time.Seconds(), id})
 	s.numStored++
+	s.mu.Unlock()
 	if s.numStored > s.collectNum {
 		go s.collect()
-		s.numStored = 0
 	}
 }
 
@@ -79,14 +78,17 @@ func (s *store) collect() {
 	now := time.Seconds()
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for e := s.exp.Front(); e != nil; e = e.Next() {
+	s.numStored = 0
+	for e := s.exp.Front(); e != nil; {
 		ev, ok := e.Value.(expValue)
 		if !ok {
 			return
 		}
 		if ev.timestamp+s.expiration < now {
 			s.ids[ev.id] = nil, false
+			next := e.Next()
 			s.exp.Remove(e)
+			e = next
 		} else {
 			return
 		}
