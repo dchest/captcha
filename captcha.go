@@ -11,6 +11,8 @@ import (
 // Standard number of digits in captcha.
 const StdLength = 6
 
+var ErrNotFound = os.NewError("captcha with the given id not found")
+
 var globalStore = newStore()
 
 // RandomDigits returns a byte slice of the given length containing random
@@ -54,7 +56,7 @@ func Reload(id string) bool {
 func WriteImage(w io.Writer, id string, width, height int) os.Error {
 	d := globalStore.getDigits(id)
 	if d == nil {
-		return os.NewError("captcha id not found")
+		return ErrNotFound
 	}
 	_, err := NewImage(d, width, height).WriteTo(w)
 	return err
@@ -65,7 +67,7 @@ func WriteImage(w io.Writer, id string, width, height int) os.Error {
 func WriteAudio(w io.Writer, id string) os.Error {
 	d := globalStore.getDigits(id)
 	if d == nil {
-		return os.NewError("captcha id not found")
+		return ErrNotFound
 	}
 	_, err := NewAudio(d).WriteTo(w)
 	return err
