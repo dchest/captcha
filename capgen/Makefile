@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=captcha
+TARG=capgen
 GOFILES=\
 	main.go
 

@@ -1,3 +1,4 @@
+// capgen is an utility to test captcha generation.
 package main
 
 import (

@@ -1,4 +1,6 @@
-// Generates ../sounds.go from WAVE files
+// generate is a tool to generate sounds.go from WAVE files.
+//
+// It creates (or rewrites) sounds.go in the parent directory.
 package main
 
 import (

@@ -22,9 +22,9 @@ _testmain.go
 *.exe
  
 # Generated test captchas
-cmd/*.png
-cmd/*.wav
+capgen/*.png
+capgen/*.wav
 
 # Programs
-cmd/captcha
-originals/generate
+capgen/capgen
+generate/generate
