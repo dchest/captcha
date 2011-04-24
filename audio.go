@@ -13,9 +13,8 @@ import (
 const sampleRate = 8000 // Hz
 
 var (
-	// Length of the longest digit sound.
 	longestDigitSndLen int
-	endingBeepSound  []byte
+	endingBeepSound    []byte
 )
 
 func init() {

@@ -40,7 +40,6 @@ func NewImage(digits []byte, width, height int) *Image {
 		uint8(rand.Intn(129)),
 		0xFF,
 	}
-	// Calculate sizes.
 	img.calculateSizes(width, height, len(digits))
 	// Draw background (10 random circles of random brightness).
 	img.fillWithCircles(10, img.dotSize)

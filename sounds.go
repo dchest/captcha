@@ -1,5 +1,5 @@
 package captcha
-		    
+
 // This file has been generated from .wav files using generate.go.
 
 var waveHeader = []byte{

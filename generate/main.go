@@ -67,7 +67,7 @@ func main() {
 	}
 	defer pcm.Close()
 	fmt.Fprintf(pcm, `package captcha
-		    
+
 // This file has been generated from .wav files using generate.go.
 
 var waveHeader = []byte{

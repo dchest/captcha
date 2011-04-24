@@ -11,10 +11,10 @@ import (
 const (
 	// Standard number of digits in captcha.
 	StdLength = 6
-	// The number of captchas created that triggers garbage collection
+	// The number of captchas created that triggers garbage collection.
 	StdCollectNum = 100
-	// Expiration time of captchas
-	StdExpiration = 2*60 // 2 minutes
+	// Expiration time of captchas.
+	StdExpiration = 2 * 60 // 2 minutes
 
 )
 
@@ -28,7 +28,7 @@ var globalStore = newStore(StdCollectNum, StdExpiration)
 func RandomDigits(length int) []byte {
 	d := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, d); err != nil {
-		panic(err)
+		panic("error reading random source: " + err.String())
 	}
 	for i := range d {
 		d[i] %= 10
@@ -99,8 +99,7 @@ func Verify(id string, digits []byte) bool {
 // generated captchas, but still exported to enable freeing memory manually if
 // needed.
 //
-// Collection is launched in a new goroutine, so this function returns
-// immediately.
+// Collection is launched in a new goroutine.
 func Collect() {
 	go globalStore.collect()
 }
