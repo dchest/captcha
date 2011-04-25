@@ -28,3 +28,4 @@ capgen/*.wav
 # Programs
 capgen/capgen
 generate/generate
+example/example
