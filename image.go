@@ -150,7 +150,7 @@ func (img *Image) strikeThrough() {
 	maxy := img.Bounds().Max.Y
 	y := rnd(maxy/3, maxy-maxy/3)
 	for x := 0; x < maxx; x += r {
-		r = rnd(1, img.dotSize/2-1)
+		r = rnd(1, img.dotSize/3)
 		y += rnd(-img.dotSize/2, img.dotSize/2)
 		if y <= 0 || y >= maxy {
 			y = rnd(maxy/3, maxy-maxy/3)
