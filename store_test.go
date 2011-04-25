@@ -7,7 +7,7 @@ import (
 )
 
 func TestSetGet(t *testing.T) {
-	s := NewMemoryStore(StdCollectNum, StdExpiration)
+	s := NewMemoryStore(CollectNum, Expiration)
 	id := "captcha id"
 	d := RandomDigits(10)
 	s.Set(id, d)
@@ -18,7 +18,7 @@ func TestSetGet(t *testing.T) {
 }
 
 func TestGetClear(t *testing.T) {
-	s := NewMemoryStore(StdCollectNum, StdExpiration)
+	s := NewMemoryStore(CollectNum, Expiration)
 	id := "captcha id"
 	d := RandomDigits(10)
 	s.Set(id, d)
