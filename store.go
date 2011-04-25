@@ -6,16 +6,34 @@ import (
 	"time"
 )
 
-// expValue stores timestamp and id of captchas. It is used in a list inside
-// store for indexing generated captchas by timestamp to enable garbage
+// An object implementing Store interface can be registered with SetCustomStore
+// function to handle storage and retrieval of captcha ids and solutions for
+// them, replacing the default memory store.
+type Store interface {
+	// Set sets the digits for the captcha id.
+	Set(id string, digits []byte)
+
+	// Get returns stored digits for the captcha id. Clear indicates
+	// whether the captcha must be deleted from the store.
+	Get(id string, clear bool) (digits []byte)
+
+	// Collect deletes expired captchas from the store.  For custom stores
+	// this method is not called automatically, it is only wired to the
+	// package's Collect function.  Custom stores must implement their own
+	// procedure for calling Collect, for example, in Set method.
+	Collect()
+}
+
+// expValue stores timestamp and id of captchas. It is used in the list inside
+// memoryStore for indexing generated captchas by timestamp to enable garbage
 // collection of expired captchas.
 type expValue struct {
 	timestamp int64
 	id        string
 }
 
-// store is an internal store for captcha ids and their values.
-type store struct {
+// memoryStore is an internal store for captcha ids and their values.
+type memoryStore struct {
 	mu  sync.RWMutex
 	ids map[string][]byte
 	exp *list.List
@@ -27,9 +45,11 @@ type store struct {
 	expiration int64
 }
 
-// newStore initializes and returns a new store.
-func newStore(collectNum int, expiration int64) *store {
-	s := new(store)
+// NewMemoryStore returns a new standard memory store for captchas with the
+// given collection threshold and expiration time in seconds. The returned
+// store must be registered with SetCustomStore to replace the default one.
+func NewMemoryStore(collectNum int, expiration int64) Store {
+	s := new(memoryStore)
 	s.ids = make(map[string][]byte)
 	s.exp = list.New()
 	s.collectNum = collectNum
@@ -37,44 +57,40 @@ func newStore(collectNum int, expiration int64) *store {
 	return s
 }
 
-// saveCaptcha saves the captcha id and the corresponding digits.
-func (s *store) saveCaptcha(id string, digits []byte) {
+func (s *memoryStore) Set(id string, digits []byte) {
 	s.mu.Lock()
 	s.ids[id] = digits
 	s.exp.PushBack(expValue{time.Seconds(), id})
 	s.numStored++
 	s.mu.Unlock()
 	if s.numStored > s.collectNum {
-		go s.collect()
+		go s.Collect()
 	}
 }
 
-// getDigits returns the digits for the given id.
-func (s *store) getDigits(id string) (digits []byte) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	digits, _ = s.ids[id]
-	return
-}
-
-// getDigitsClear returns the digits for the given id, and removes them from
-// the store.
-func (s *store) getDigitsClear(id string) (digits []byte) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
+	if !clear {
+		// When we don't need to clear captcha, acquire read lock.
+		s.mu.RLock()
+		defer s.mu.RUnlock()
+	} else {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	digits, ok := s.ids[id]
 	if !ok {
 		return
 	}
-	s.ids[id] = nil, false
-	// XXX(dchest) Index (s.exp) will be cleaned when collecting expired
-	// captchas.  Can't clean it here, because we don't store reference to
-	// expValue in the map. Maybe store it?
+	if clear {
+		s.ids[id] = nil, false
+		// XXX(dchest) Index (s.exp) will be cleaned when collecting expired
+		// captchas.  Can't clean it here, because we don't store reference to
+		// expValue in the map. Maybe store it?
+	}
 	return
 }
 
-// collect deletes expired captchas from the store.
-func (s *store) collect() {
+func (s *memoryStore) Collect() {
 	now := time.Seconds()
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -18,7 +18,7 @@ func TestVerify(t *testing.T) {
 		t.Errorf("verified wrong captcha")
 	}
 	id = New(StdLength)
-	d := globalStore.getDigits(id) // cheating
+	d := globalStore.Get(id, false) // cheating
 	if !Verify(id, d) {
 		t.Errorf("proper captcha not verified")
 	}
@@ -26,9 +26,9 @@ func TestVerify(t *testing.T) {
 
 func TestReload(t *testing.T) {
 	id := New(StdLength)
-	d1 := globalStore.getDigits(id) // cheating
+	d1 := globalStore.Get(id, false) // cheating
 	Reload(id)
-	d2 := globalStore.getDigits(id) // cheating again
+	d2 := globalStore.Get(id, false) // cheating again
 	if bytes.Equal(d1, d2) {
 		t.Errorf("reload didn't work: %v = %v", d1, d2)
 	}
