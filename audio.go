@@ -91,6 +91,11 @@ func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
 	return
 }
 
+// EncodedLen returns the length of WAV-encoded audio captcha.
+func (a *Audio) EncodedLen() int {
+	return len(waveHeader) + 4 + a.body.Len()
+}
+
 // mixSound mixes src into dst. Dst must have length equal to or greater than
 // src length.
 func mixSound(dst, src []byte) {
