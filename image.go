@@ -58,10 +58,11 @@ func NewImage(digits []byte, width, height int) *Image {
 	return img
 }
 
+// BUG(dchest): While Image conforms to io.WriterTo interface, its WriteTo
+// method returns 0 instead of the actual bytes written because png.Encode
+// doesn't report this.
+
 // WriteTo writes captcha image in PNG format into the given writer.
-//
-// Bug: while Image conforms to io.WriterTo interface, this function returns 0
-// instead of the actual bytes written because png.Encode doesn't report this.
 func (img *Image) WriteTo(w io.Writer) (int64, os.Error) {
 	return 0, png.Encode(w, img)
 }
