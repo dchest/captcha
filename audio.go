@@ -26,6 +26,11 @@ func init() {
 	endingBeepSound = changeSpeed(beepSound, 1.4)
 }
 
+// BUG(dchest): [Not our bug] Google Chrome 10 plays unsigned 8-bit PCM WAVE
+// audio on Mac with horrible distortions.  Issue:
+// http://code.google.com/p/chromium/issues/detail?id=70730.
+// This has been fixed, and version 12 will play them properly.
+
 type Audio struct {
 	body *bytes.Buffer
 }
