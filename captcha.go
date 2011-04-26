@@ -210,15 +210,15 @@ func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	var err os.Error
 	if r.FormValue("reload") != "" {
 		Reload(id)
 	}
+	var err os.Error
 	switch ext {
-	case ".png", ".PNG":
+	case ".png":
 		w.Header().Set("Content-Type", "image/png")
 		err = WriteImage(w, id, h.imgWidth, h.imgHeight)
-	case ".wav", ".WAV":
+	case ".wav":
 		if r.URL.RawQuery == "get" {
 			w.Header().Set("Content-Type", "application/octet-stream")
 		} else {
@@ -227,7 +227,7 @@ func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//err = WriteAudio(w, id)
 		//XXX(dchest) Workaround for Chrome: it wants content-length,
 		//or else will start playing NOT from the beginning.
-		//File issue: http://code.google.com/p/chromium/issues/detail?id=80565
+		//Filed issue: http://code.google.com/p/chromium/issues/detail?id=80565
 		d := globalStore.Get(id, false)
 		if d == nil {
 			err = ErrNotFound
