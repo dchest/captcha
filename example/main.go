@@ -11,8 +11,13 @@ import (
 var formTemplate = template.MustParse(formTemplateSrc, nil)
 
 func showFormHandler(w http.ResponseWriter, r *http.Request) {
-	d := struct{ CaptchaId string }{captcha.New(captcha.StdLength)}
-	fmt.Fprintf(w, formJs)
+	d := struct {
+		CaptchaId  string
+		JavaScript string
+	}{
+		captcha.New(captcha.StdLength),
+		formJavaScript,
+	}
 	if err := formTemplate.Execute(w, &d); err != nil {
 		http.Error(w, err.String(), http.StatusInternalServerError)
 	}
@@ -33,8 +38,7 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
-const formJs = `
-<script>
+const formJavaScript = `
 function playAudio() {
 	var e = document.getElementById('audio')
 	e.style.display = 'block';
@@ -55,19 +59,24 @@ function reload() {
 	setSrcQuery(document.getElementById('audio'), (new Date()).getTime());
 	return false;
 }
-</script>
 `
 
-const formTemplateSrc = `
+const formTemplateSrc = `<!doctype html>
+<head><title>Captcha Example</title></head>
+<body>
+<script>
+{JavaScript}
+</script>
 <form action="/process" method=post>
 <p>Type the numbers you see in the picture below:</p>
 <p><img id=image src="/captcha/{CaptchaId}.png" alt="Captcha image"></p>
-<a href="#" onclick="return reload()">Reload</a> | <a href="#" onclick="return playAudio()">Play Audio</a>
-<audio id=audio controls style="display:none" src="/captcha/{CaptchaId}.wav" preload=none type="audio/wav">
+<a href="#" onclick="reload()">Reload</a> | <a href="#" onclick="playAudio()">Play Audio</a>
+<audio id=audio controls style="display:none" src="/captcha/{CaptchaId}.wav" preload=none>
   You browser doesn't support audio.
   <a href="/captcha/{CaptchaId}.wav?get">Download file</a> to play it in the external player.
 </audio>
-<input type=hidden name=captchaId value={CaptchaId}><br>
+<input type=hidden name=captchaId value="{CaptchaId}"><br>
 <input name=captchaSolution>
 <input type=submit value=Submit>
+</form>
 `
