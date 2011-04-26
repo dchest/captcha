@@ -1,5 +1,3 @@
-*TODO(dchest): Add example images and audio.*
-
 Package captcha
 =====================
 
@@ -7,6 +5,14 @@ Package captcha
 
 Package captcha implements generation and verification of image and audio
 CAPTCHAs.
+
+
+Examples
+--------
+
+![Image](https://github.com/dchest/captcha/raw/master/capgen/example.png)
+
+[Audio](https://github.com/dchest/captcha/raw/master/capgen/example.wav)
 
 
 Constants
