@@ -2,9 +2,10 @@
 package main
 
 import (
-	"fmt"
 	"github.com/dchest/captcha"
 	"http"
+	"io"
+	"log"
 	"template"
 )
 
@@ -25,17 +26,19 @@ func showFormHandler(w http.ResponseWriter, r *http.Request) {
 
 func processFormHandler(w http.ResponseWriter, r *http.Request) {
 	if !captcha.VerifyString(r.FormValue("captchaId"), r.FormValue("captchaSolution")) {
-		fmt.Fprintf(w, "Wrong captcha solution! No robots allowed!")
+		io.WriteString(w, "Wrong captcha solution! No robots allowed!\n")
 		return
 	}
-	fmt.Fprintf(w, "Great job, human! You solved the captcha.")
+	io.WriteString(w, "Great job, human! You solved the captcha.\n")
 }
 
 func main() {
 	http.HandleFunc("/", showFormHandler)
 	http.HandleFunc("/process", processFormHandler)
 	http.Handle("/captcha/", captcha.Server(captcha.StdWidth, captcha.StdHeight))
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 }
 
 const formJavaScript = `
