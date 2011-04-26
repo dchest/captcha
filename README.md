@@ -12,30 +12,34 @@ CAPTCHAs.
 Constants
 ---------
 
-	const (
-		// Standard number of digits in captcha.
-		StdLength = 6
-		// The number of captchas created that triggers garbage collection used
-		// by default store.
-		CollectNum = 100
-		// Expiration time of captchas used by default store.
-		Expiration = 10 * 60 // 10 minutes
+``` go
+const (
+    // Standard number of digits in captcha.
+    StdLength = 6
+    // The number of captchas created that triggers garbage collection used
+    // by default store.
+    CollectNum = 100
+    // Expiration time of captchas used by default store.
+    Expiration = 10 * 60 // 10 minutes
 
-	)
+)
+```
 
-
-	const (
-	    // Standard width and height of a captcha image.
-	    StdWidth  = 300
-	    StdHeight = 80
-	)
-
+``` go
+const (
+    // Standard width and height of a captcha image.
+    StdWidth  = 300
+    StdHeight = 80
+)
+```
 
 
 Variables
 ---------
 
-	var ErrNotFound = os.NewError("captcha with the given id not found")
+``` go
+var ErrNotFound = os.NewError("captcha with the given id not found")
+```
 
 
 
@@ -141,10 +145,12 @@ given id. The image will have the given width and height.
 Types
 -----
 
-	type Audio struct {
+``` go
+type Audio struct {
     // contains unexported fields
 }
-	
+```
+
 
 ### func NewAudio
 
@@ -166,11 +172,13 @@ EncodedLen returns the length of WAV-encoded audio captcha.
 WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 returns the number of bytes written and an error if any.
 
-	type Image struct {
-	    *image.NRGBA
-	    // contains unexported fields
-	}
-	
+``` go
+type Image struct {
+    *image.NRGBA
+    // contains unexported fields
+}
+```
+
 
 ### func NewImage
 
@@ -185,21 +193,23 @@ given digits, where each digit must be in range 0-9.
 	
 WriteTo writes captcha image in PNG format into the given writer.
 
-	type Store interface {
-	    // Set sets the digits for the captcha id.
-	    Set(id string, digits []byte)
+``` go
+type Store interface {
+    // Set sets the digits for the captcha id.
+    Set(id string, digits []byte)
 
-	    // Get returns stored digits for the captcha id. Clear indicates
-	    // whether the captcha must be deleted from the store.
-	    Get(id string, clear bool) (digits []byte)
+    // Get returns stored digits for the captcha id. Clear indicates
+    // whether the captcha must be deleted from the store.
+    Get(id string, clear bool) (digits []byte)
 
-	    // Collect deletes expired captchas from the store.  For custom stores
-	    // this method is not called automatically, it is only wired to the
-	    // package's Collect function.  Custom stores must implement their own
-	    // procedure for calling Collect, for example, in Set method.
-	    Collect()
-	}
-	
+    // Collect deletes expired captchas from the store.  For custom stores
+    // this method is not called automatically, it is only wired to the
+    // package's Collect function.  Custom stores must implement their own
+    // procedure for calling Collect, for example, in Set method.
+    Collect()
+}
+```
+
 An object implementing Store interface can be registered with SetCustomStore
 function to handle storage and retrieval of captcha ids and solutions for
 them, replacing the default memory store.
@@ -224,3 +234,11 @@ This has been fixed, and version 12 will play them properly.
 While Image conforms to io.WriterTo interface, its WriteTo
 method returns 0 instead of the actual bytes written because png.Encode
 doesn't report this.
+
+
+Subdirectories
+--------------
+
+capgen
+example
+generate
