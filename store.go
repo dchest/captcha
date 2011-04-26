@@ -27,17 +27,17 @@ type Store interface {
 // expValue stores timestamp and id of captchas. It is used in the list inside
 // memoryStore for indexing generated captchas by timestamp to enable garbage
 // collection of expired captchas.
-type expValue struct {
+type idByTimeValue struct {
 	timestamp int64
 	id        string
 }
 
 // memoryStore is an internal store for captcha ids and their values.
 type memoryStore struct {
-	mu  sync.RWMutex
-	ids map[string][]byte
-	exp *list.List
-	// Number of items stored after last collection.
+	mu         sync.RWMutex
+	digitsById map[string][]byte
+	idByTime   *list.List
+	// Number of items stored since last collection.
 	numStored int
 	// Number of saved items that triggers collection.
 	collectNum int
@@ -50,8 +50,8 @@ type memoryStore struct {
 // store must be registered with SetCustomStore to replace the default one.
 func NewMemoryStore(collectNum int, expiration int64) Store {
 	s := new(memoryStore)
-	s.ids = make(map[string][]byte)
-	s.exp = list.New()
+	s.digitsById = make(map[string][]byte)
+	s.idByTime = list.New()
 	s.collectNum = collectNum
 	s.expiration = expiration
 	return s
@@ -59,8 +59,8 @@ func NewMemoryStore(collectNum int, expiration int64) Store {
 
 func (s *memoryStore) Set(id string, digits []byte) {
 	s.mu.Lock()
-	s.ids[id] = digits
-	s.exp.PushBack(expValue{time.Seconds(), id})
+	s.digitsById[id] = digits
+	s.idByTime.PushBack(idByTimeValue{time.Seconds(), id})
 	s.numStored++
 	s.mu.Unlock()
 	if s.numStored > s.collectNum {
@@ -77,15 +77,16 @@ func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 	}
-	digits, ok := s.ids[id]
+	digits, ok := s.digitsById[id]
 	if !ok {
 		return
 	}
 	if clear {
-		s.ids[id] = nil, false
-		// XXX(dchest) Index (s.exp) will be cleaned when collecting expired
-		// captchas.  Can't clean it here, because we don't store reference to
-		// expValue in the map. Maybe store it?
+		s.digitsById[id] = nil, false
+		// XXX(dchest) Index (s.idByTime) will be cleaned when
+		// collecting expired captchas.  Can't clean it here, because
+		// we don't store reference to expValue in the map.
+		// Maybe store it?
 	}
 	return
 }
@@ -95,15 +96,15 @@ func (s *memoryStore) Collect() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.numStored = 0
-	for e := s.exp.Front(); e != nil; {
-		ev, ok := e.Value.(expValue)
+	for e := s.idByTime.Front(); e != nil; {
+		ev, ok := e.Value.(idByTimeValue)
 		if !ok {
 			return
 		}
 		if ev.timestamp+s.expiration < now {
-			s.ids[ev.id] = nil, false
+			s.digitsById[ev.id] = nil, false
 			next := e.Next()
-			s.exp.Remove(e)
+			s.idByTime.Remove(e)
 			e = next
 		} else {
 			return
