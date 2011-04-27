@@ -59,8 +59,8 @@ Constants
 
 ``` go
 const (
-    // Standard number of digits in captcha.
-    StdLength = 6
+    // Default number of digits in captcha solution.
+    DefaultLen = 6
     // The number of captchas created that triggers garbage collection used
     // by default store.
     CollectNum = 100
@@ -93,10 +93,17 @@ Functions
 
 ### func New
 
-	func New(length int) (id string)
+	func New() string
 	
-New creates a new captcha of the given length, saves it in the internal
-storage, and returns its id.
+New creates a new captcha with the standard length, saves it in the internal
+storage and returns its id.
+
+### func NewLen
+
+	func NewLen(length int) (id string)
+	
+NewLen is just like New, but accepts length of a captcha solution as the
+argument.
 
 ### func RandomDigits
 
@@ -271,9 +278,15 @@ method returns 0 instead of the actual bytes written because png.Encode
 doesn't report this.
 
 
+Other packages
+--------------
+
+* main
+
 Subdirectories
 --------------
 
 * capgen
 * example
 * generate
+
