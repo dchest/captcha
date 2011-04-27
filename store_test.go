@@ -43,7 +43,7 @@ func TestCollect(t *testing.T) {
 		ids[i] = uniuri.New()
 		s.Set(ids[i], d)
 	}
-	s.Collect()
+	s.(*memoryStore).collect()
 	// Must be already collected
 	nc := 0
 	for i := range ids {
