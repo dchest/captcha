@@ -140,7 +140,9 @@ For example, for file name "B9QTvDV1RXbVJ3Ac.png" it serves an image captcha
 with id "B9QTvDV1RXbVJ3Ac", and for "B9QTvDV1RXbVJ3Ac.wav" it serves the
 same captcha in audio format.
 
-To serve an audio captcha as downloadable file, append "?get" to URL.
+To serve a captcha as a downloadable file, the URL must be constructed in
+such a way as if the file to serve is in "download" subdirectory:
+"/download/B9QTvDV1RXbVJ3Ac.wav".
 
 To reload captcha (get a different solution for the same captcha id), append
 "?reload=x" to URL, where x may be anything (for example, current time or a
@@ -271,12 +273,12 @@ store must be registered with SetCustomStore to replace the default one.
 Bugs
 ----
 
-[Not our bug] Google Chrome 10 plays unsigned 8-bit PCM WAVE
+* [Not our bug] Google Chrome 10 plays unsigned 8-bit PCM WAVE
 audio on Mac with horrible distortions.  Issue:
 http://code.google.com/p/chromium/issues/detail?id=70730.
 This has been fixed, and version 12 will play them properly.
 
-While Image conforms to io.WriterTo interface, its WriteTo
+* While Image conforms to io.WriterTo interface, its WriteTo
 method returns 0 instead of the actual bytes written because png.Encode
 doesn't report this.
 
@@ -284,6 +286,6 @@ doesn't report this.
 Subdirectories
 --------------
 
-capgen
-example
-generate
+* capgen
+* example
+* generate
