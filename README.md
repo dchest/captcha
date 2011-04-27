@@ -73,7 +73,7 @@ const (
 ``` go
 const (
     // Standard width and height of a captcha image.
-    StdWidth  = 300
+    StdWidth  = 240
     StdHeight = 80
 )
 ```
