@@ -76,7 +76,7 @@ const formTemplateSrc = `<!doctype html>
 <a href="#" onclick="reload()">Reload</a> | <a href="#" onclick="playAudio()">Play Audio</a>
 <audio id=audio controls style="display:none" src="/captcha/{CaptchaId}.wav" preload=none>
   You browser doesn't support audio.
-  <a href="/captcha/{CaptchaId}.wav?get">Download file</a> to play it in the external player.
+  <a href="/captcha/download/{CaptchaId}.wav">Download file</a> to play it in the external player.
 </audio>
 <input type=hidden name=captchaId value="{CaptchaId}"><br>
 <input name=captchaSolution>
