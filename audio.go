@@ -15,6 +15,7 @@ const sampleRate = 8000 // Hz
 var (
 	longestDigitSndLen int
 	endingBeepSound    []byte
+	reverseDigitSounds [][]byte
 )
 
 func init() {
@@ -24,6 +25,11 @@ func init() {
 		}
 	}
 	endingBeepSound = changeSpeed(beepSound, 1.4)
+	// Preallocate reversed digit sounds for background noise.
+	reverseDigitSounds = make([][]byte, len(digitSounds))
+	for i, v := range digitSounds {
+		reverseDigitSounds[i] = reversedSound(v)
+	}
 }
 
 // BUG(dchest): [Not our bug] Google Chrome 10 plays unsigned 8-bit PCM WAVE
@@ -160,7 +166,7 @@ func randomSpeed(a []byte) []byte {
 
 func makeSilence(length int) []byte {
 	b := make([]byte, length)
-	for i := 0; i < length; i++ {
+	for i := range b {
 		b[i] = 128
 	}
 	return b
@@ -168,13 +174,14 @@ func makeSilence(length int) []byte {
 
 func makeWhiteNoise(length int, level uint8) []byte {
 	noise := make([]byte, length)
-	_, err := io.ReadFull(crand.Reader, noise)
-	if err != nil {
+	if _, err := io.ReadFull(crand.Reader, noise); err != nil {
 		panic("error reading from random source: " + err.String())
 	}
-	for i := 0; i < len(noise); i++ {
-		noise[i] %= level
-		noise[i] += 128 - level/2
+	adj := 128 - level/2
+	for i, v := range noise {
+		v %= level
+		v += adj
+		noise[i] = v
 	}
 	return noise
 }
@@ -191,8 +198,8 @@ func reversedSound(a []byte) []byte {
 func makeBackgroundSound(length int) []byte {
 	b := makeWhiteNoise(length, 8)
 	for i := 0; i < length/(sampleRate/10); i++ {
-		snd := digitSounds[rand.Intn(10)]
-		snd = changeSpeed(reversedSound(snd), rndf(0.8, 1.4))
+		snd := reverseDigitSounds[rand.Intn(10)]
+		snd = changeSpeed(snd, rndf(0.8, 1.4))
 		place := rand.Intn(len(b) - len(snd))
 		setSoundLevel(snd, rndf(0.5, 1.2))
 		mixSound(b[place:], snd)
