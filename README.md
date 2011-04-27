@@ -118,7 +118,7 @@ will write the new one).
 
 ### func Server
 
-	func Server(w, h int) http.Handler
+	func Server(imgWidth, imgHeight int) http.Handler
 	
 Server returns a handler that serves HTTP requests with image or
 audio representations of captchas. Image dimensions are accepted as
@@ -131,7 +131,7 @@ with id "B9QTvDV1RXbVJ3Ac", and for "B9QTvDV1RXbVJ3Ac.wav" it serves the
 same captcha in audio format.
 
 To serve a captcha as a downloadable file, the URL must be constructed in
-such a way as if the file to serve is in "download" subdirectory:
+such a way as if the file to serve is in the "download" subdirectory:
 "/download/B9QTvDV1RXbVJ3Ac.wav".
 
 To reload captcha (get a different solution for the same captcha id), append

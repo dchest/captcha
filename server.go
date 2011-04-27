@@ -23,14 +23,16 @@ type captchaHandler struct {
 // same captcha in audio format.
 //
 // To serve a captcha as a downloadable file, the URL must be constructed in
-// such a way as if the file to serve is in "download" subdirectory:
+// such a way as if the file to serve is in the "download" subdirectory:
 // "/download/B9QTvDV1RXbVJ3Ac.wav".
 //
 // To reload captcha (get a different solution for the same captcha id), append
 // "?reload=x" to URL, where x may be anything (for example, current time or a
 // random number to make browsers refetch an image instead of loading it from
 // cache).
-func Server(w, h int) http.Handler { return &captchaHandler{w, h} }
+func Server(imgWidth, imgHeight int) http.Handler { 
+	return &captchaHandler{imgWidth, imgHeight}
+}
 
 func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, download bool) os.Error {
 	if download {
