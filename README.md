@@ -91,16 +91,6 @@ var ErrNotFound = os.NewError("captcha with the given id not found")
 Functions
 ---------
 
-### func Collect
-
-	func Collect()
-	
-Collect deletes expired or used captchas from the internal storage. It is
-called automatically by New function every CollectNum generated captchas,
-but still exported to enable freeing memory manually if needed.
-
-Collection is launched in a new goroutine.
-
 ### func New
 
 	func New(length int) (id string)
@@ -248,18 +238,16 @@ type Store interface {
     // Get returns stored digits for the captcha id. Clear indicates
     // whether the captcha must be deleted from the store.
     Get(id string, clear bool) (digits []byte)
-
-    // Collect deletes expired captchas from the store.  For custom stores
-    // this method is not called automatically, it is only wired to the
-    // package's Collect function.  Custom stores must implement their own
-    // procedure for calling Collect, for example, in Set method.
-    Collect()
 }
 ```
 
 An object implementing Store interface can be registered with SetCustomStore
 function to handle storage and retrieval of captcha ids and solutions for
 them, replacing the default memory store.
+
+It is the responsibility of an object to delete expired and used captchas
+when necessary (for example, the default memory store collects them in Set
+method after the certain amount of captchas has been stored.)
 
 ### func NewMemoryStore
 

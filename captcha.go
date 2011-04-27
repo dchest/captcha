@@ -166,12 +166,3 @@ func VerifyString(id string, digits string) bool {
 	}
 	return Verify(id, ns)
 }
-
-// Collect deletes expired or used captchas from the internal storage. It is
-// called automatically by New function every CollectNum generated captchas,
-// but still exported to enable freeing memory manually if needed.
-//
-// Collection is launched in a new goroutine.
-func Collect() {
-	go globalStore.Collect()
-}

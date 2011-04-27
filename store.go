@@ -9,6 +9,10 @@ import (
 // An object implementing Store interface can be registered with SetCustomStore
 // function to handle storage and retrieval of captcha ids and solutions for
 // them, replacing the default memory store.
+//
+// It is the responsibility of an object to delete expired and used captchas
+// when necessary (for example, the default memory store collects them in Set
+// method after the certain amount of captchas has been stored.)
 type Store interface {
 	// Set sets the digits for the captcha id.
 	Set(id string, digits []byte)
@@ -16,12 +20,6 @@ type Store interface {
 	// Get returns stored digits for the captcha id. Clear indicates
 	// whether the captcha must be deleted from the store.
 	Get(id string, clear bool) (digits []byte)
-
-	// Collect deletes expired captchas from the store.  For custom stores
-	// this method is not called automatically, it is only wired to the
-	// package's Collect function.  Custom stores must implement their own
-	// procedure for calling Collect, for example, in Set method.
-	Collect()
 }
 
 // expValue stores timestamp and id of captchas. It is used in the list inside
@@ -67,7 +65,7 @@ func (s *memoryStore) Set(id string, digits []byte) {
 		return
 	}
 	s.mu.Unlock()
-	go s.Collect()
+	go s.collect()
 }
 
 func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
@@ -93,7 +91,7 @@ func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
 	return
 }
 
-func (s *memoryStore) Collect() {
+func (s *memoryStore) collect() {
 	now := time.Seconds()
 	s.mu.Lock()
 	defer s.mu.Unlock()
