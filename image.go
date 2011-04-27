@@ -160,10 +160,10 @@ func (img *Image) strikeThrough() {
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
 	y := rnd(maxy/3, maxy-maxy/3)
-	freq := rndf(80, 180)
+	period := rndf(80, 180)
 	for x := 0; x < maxx; x++ {
-		xo := wave * math.Cos(2.0*math.Pi*float64(y)/freq)
-		yo := wave * math.Sin(2.0*math.Pi*float64(x)/freq)
+		xo := wave * math.Cos(2.0*math.Pi*float64(y)/period)
+		yo := wave * math.Sin(2.0*math.Pi*float64(x)/period)
 		for yn := 0; yn < height; yn++ {
 			r := rnd(0, img.dotSize)
 			img.drawCircle(img.primaryColor, x+int(xo), y+int(yo)+(yn*img.dotSize), r/2)
@@ -192,28 +192,21 @@ func (img *Image) drawDigit(digit []byte, x, y int) {
 	}
 }
 
-func fmin(a, b float64) float64 {
-	if a < b {
-		return a
-	}
-	return b
-}
+func (img *Image) distort(amplude float64, period float64) {
+	w := img.Bounds().Max.X
+	h := img.Bounds().Max.Y
 
-func (img *Image) distort(wave float64, freq float64) {
-	nWidth := img.Bounds().Max.X
-	nHeight := img.Bounds().Max.Y
+	oldImg := img.NRGBA
+	newImg := image.NewNRGBA(w, h)
 
-	oldimg := img.NRGBA
-	newimg := image.NewNRGBA(nWidth, nHeight)
-
-	for x := 0; x < nWidth; x++ {
-		for y := 0; y < nHeight; y++ {
-			ox := wave * math.Sin(2.0*math.Pi*float64(y)/freq)
-			oy := wave * math.Cos(2.0*math.Pi*float64(x)/freq)
-			newimg.Set(x, y, oldimg.At(x + int(ox), y + int(oy)))
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			ox := amplude * math.Sin(2.0*math.Pi*float64(y)/period)
+			oy := amplude * math.Cos(2.0*math.Pi*float64(x)/period)
+			newImg.Set(x, y, oldImg.At(x + int(ox), y + int(oy)))
 		}
 	}
-	img.NRGBA = newimg
+	img.NRGBA = newImg
 }
 
 func setRandomBrightness(c *image.NRGBAColor, max uint8) {
