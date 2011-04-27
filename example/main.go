@@ -12,6 +12,10 @@ import (
 var formTemplate = template.MustParse(formTemplateSrc, nil)
 
 func showFormHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 	d := struct {
 		CaptchaId  string
 		JavaScript string
@@ -27,9 +31,10 @@ func showFormHandler(w http.ResponseWriter, r *http.Request) {
 func processFormHandler(w http.ResponseWriter, r *http.Request) {
 	if !captcha.VerifyString(r.FormValue("captchaId"), r.FormValue("captchaSolution")) {
 		io.WriteString(w, "Wrong captcha solution! No robots allowed!\n")
-		return
+	} else {
+		io.WriteString(w, "Great job, human! You solved the captcha.\n")
 	}
-	io.WriteString(w, "Great job, human! You solved the captcha.\n")
+	io.WriteString(w, "<br><a href='/'>Try another one</a>")
 }
 
 func main() {
