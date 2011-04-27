@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"math"
 	"os"
 	"rand"
 	"time"
@@ -11,7 +12,7 @@ import (
 
 const (
 	// Standard width and height of a captcha image.
-	StdWidth  = 300
+	StdWidth  = 240
 	StdHeight = 80
 
 	maxSkew = 0.7
@@ -41,13 +42,17 @@ func NewImage(digits []byte, width, height int) *Image {
 		0xFF,
 	}
 	img.calculateSizes(width, height, len(digits))
-	// Draw background (10 random circles of random brightness).
-	img.fillWithCircles(10, img.dotSize)
 	// Randomly position captcha inside the image.
 	maxx := width - (img.numWidth+img.dotSize)*len(digits) - img.dotSize
 	maxy := height - img.numHeight - img.dotSize*2
-	x := rnd(img.dotSize*2, maxx)
-	y := rnd(img.dotSize*2, maxy)
+	var border int
+	if width > height {
+		border = height / 5
+	} else {
+		border = width / 5
+	}
+	x := rnd(border, maxx-border)
+	y := rnd(border, maxy-border)
 	// Draw digits.
 	for _, n := range digits {
 		img.drawDigit(font[n], x, y)
@@ -55,6 +60,10 @@ func NewImage(digits []byte, width, height int) *Image {
 	}
 	// Draw strike-through line.
 	img.strikeThrough()
+	// Apply wave distortion.
+	img.distort(rndf(5, 10), rndf(100, 200))
+	// Draw background (20 random circles of random brightness).
+	img.fillWithCircles(20, img.dotSize)
 	return img
 }
 
@@ -71,9 +80,9 @@ func (img *Image) calculateSizes(width, height, ncount int) {
 	// Goal: fit all digits inside the image.
 	var border int
 	if width > height {
-		border = height / 5
+		border = height / 4
 	} else {
-		border = width / 5
+		border = width / 4
 	}
 	// Convert everything to floats for calculations.
 	w := float64(width - border*2)
@@ -146,41 +155,65 @@ func (img *Image) fillWithCircles(n, maxradius int) {
 }
 
 func (img *Image) strikeThrough() {
-	r := 0
+	wave := rndf(5, 20)
+	height := img.dotSize
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
 	y := rnd(maxy/3, maxy-maxy/3)
-	for x := 0; x < maxx; x += r {
-		r = rnd(1, img.dotSize/3)
-		y += rnd(-img.dotSize/2, img.dotSize/2)
-		if y <= 0 || y >= maxy {
-			y = rnd(maxy/3, maxy-maxy/3)
+	freq := rndf(80, 180)
+	for x := 0; x < maxx; x++ {
+		xo := wave * math.Cos(2.0*math.Pi*float64(y)/freq)
+		yo := wave * math.Sin(2.0*math.Pi*float64(x)/freq)
+		for yn := 0; yn < height; yn++ {
+			r := rnd(0, img.dotSize)
+			img.drawCircle(img.primaryColor, x+int(xo), y+int(yo)+(yn*img.dotSize), r/2)
 		}
-		img.drawCircle(img.primaryColor, x, y, r)
 	}
 }
 
 func (img *Image) drawDigit(digit []byte, x, y int) {
 	skf := rndf(-maxSkew, maxSkew)
 	xs := float64(x)
-	minr := img.dotSize / 2 // minumum radius
-	maxr := img.dotSize     // maximum radius
-	y += rnd(-minr, minr)
+	r := img.dotSize/2
+	y += rnd(-r, r)
 	for yy := 0; yy < fontHeight; yy++ {
 		for xx := 0; xx < fontWidth; xx++ {
 			if digit[yy*fontWidth+xx] != blackChar {
 				continue
 			}
 			// Introduce random variations.
-			or := rnd(minr, maxr)
-			ox := x + (xx * img.dotSize) + rnd(0, or/2)
-			oy := y + (yy * img.dotSize) + rnd(0, or/2)
+			ox := x + (xx * img.dotSize) + rnd(0, r/2)
+			oy := y + (yy * img.dotSize) + rnd(0, r/2)
 
-			img.drawCircle(img.primaryColor, ox, oy, or)
+			img.drawCircle(img.primaryColor, ox, oy, r)
 		}
 		xs += skf
 		x = int(xs)
 	}
+}
+
+func fmin(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func (img *Image) distort(wave float64, freq float64) {
+	nWidth := img.Bounds().Max.X
+	nHeight := img.Bounds().Max.Y
+
+	oldimg := img.NRGBA
+	newimg := image.NewNRGBA(nWidth, nHeight)
+
+	for x := 0; x < nWidth; x++ {
+		for y := 0; y < nHeight; y++ {
+			ox := wave * math.Sin(2.0*math.Pi*float64(y)/freq)
+			oy := wave * math.Cos(2.0*math.Pi*float64(x)/freq)
+			newimg.Set(x, y, oldimg.At(x + int(ox), y + int(oy)))
+		}
+	}
+	img.NRGBA = newimg
 }
 
 func setRandomBrightness(c *image.NRGBAColor, max uint8) {
