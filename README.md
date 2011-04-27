@@ -278,11 +278,6 @@ method returns 0 instead of the actual bytes written because png.Encode
 doesn't report this.
 
 
-Other packages
---------------
-
-* main
-
 Subdirectories
 --------------
 
