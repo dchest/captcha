@@ -22,7 +22,9 @@ type captchaHandler struct {
 // with id "B9QTvDV1RXbVJ3Ac", and for "B9QTvDV1RXbVJ3Ac.wav" it serves the
 // same captcha in audio format.
 //
-// To serve an audio captcha as downloadable file, append "?get" to URL.
+// To serve a captcha as a downloadable file, the URL must be constructed in
+// such a way as if the file to serve is in "download" subdirectory:
+// "/download/B9QTvDV1RXbVJ3Ac.wav".
 //
 // To reload captcha (get a different solution for the same captcha id), append
 // "?reload=x" to URL, where x may be anything (for example, current time or a
@@ -30,8 +32,38 @@ type captchaHandler struct {
 // cache).
 func Server(w, h int) http.Handler { return &captchaHandler{w, h} }
 
+func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, download bool) os.Error {
+	if download {
+		w.Header().Set("Content-Type", "application/octet-stream")
+	}
+	switch ext {
+	case ".png":
+		if !download {
+			w.Header().Set("Content-Type", "image/png")
+		}
+		return WriteImage(w, id, h.imgWidth, h.imgHeight)
+	case ".wav":
+		if !download {
+			w.Header().Set("Content-Type", "audio/x-wav")
+		}
+		//return WriteAudio(w, id)
+		//XXX(dchest) Workaround for Chrome: it wants content-length,
+		//or else will start playing NOT from the beginning.
+		//Filed issue: http://code.google.com/p/chromium/issues/detail?id=80565
+		d := globalStore.Get(id, false)
+		if d == nil {
+			return ErrNotFound
+		}
+		a := NewAudio(d)
+		w.Header().Set("Content-Length", strconv.Itoa(a.EncodedLen()))
+		_, err := a.WriteTo(w)
+		return err
+	}
+	return ErrNotFound
+}
+
 func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	_, file := path.Split(r.URL.Path)
+	dir, file := path.Split(r.URL.Path)
 	ext := path.Ext(file)
 	id := file[:len(file)-len(ext)]
 	if ext == "" || id == "" {
@@ -41,33 +73,8 @@ func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("reload") != "" {
 		Reload(id)
 	}
-	var err os.Error
-	switch ext {
-	case ".png":
-		w.Header().Set("Content-Type", "image/png")
-		err = WriteImage(w, id, h.imgWidth, h.imgHeight)
-	case ".wav":
-		if r.URL.RawQuery == "get" {
-			w.Header().Set("Content-Type", "application/octet-stream")
-		} else {
-			w.Header().Set("Content-Type", "audio/x-wav")
-		}
-		//err = WriteAudio(w, id)
-		//XXX(dchest) Workaround for Chrome: it wants content-length,
-		//or else will start playing NOT from the beginning.
-		//Filed issue: http://code.google.com/p/chromium/issues/detail?id=80565
-		d := globalStore.Get(id, false)
-		if d == nil {
-			err = ErrNotFound
-		} else {
-			a := NewAudio(d)
-			w.Header().Set("Content-Length", strconv.Itoa(a.EncodedLen()))
-			_, err = a.WriteTo(w)
-		}
-	default:
-		err = ErrNotFound
-	}
-	if err != nil {
+	download := path.Base(dir) == "download"
+	if err := h.serve(w, id, ext, download); err != nil {
 		if err == ErrNotFound {
 			http.NotFound(w, r)
 			return
