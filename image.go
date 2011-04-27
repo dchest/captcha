@@ -14,7 +14,7 @@ const (
 	StdWidth  = 300
 	StdHeight = 80
 
-	maxSkew = 2
+	maxSkew = 0.7
 )
 
 type Image struct {
@@ -79,7 +79,7 @@ func (img *Image) calculateSizes(width, height, ncount int) {
 	w := float64(width - border*2)
 	h := float64(height - border*2)
 	// fw takes into account 1-dot spacing between digits.
-	fw := float64(fontWidth) + 1
+	fw := float64(fontWidth + 1)
 	fh := float64(fontHeight)
 	nc := float64(ncount)
 	// Calculate the width of a single digit taking into account only the
@@ -97,8 +97,8 @@ func (img *Image) calculateSizes(width, height, ncount int) {
 	img.dotSize = int(nh / fh)
 	// Save everything, making the actual width smaller by 1 dot to account
 	// for spacing between digits.
-	img.numWidth = int(nw)
-	img.numHeight = int(nh) - img.dotSize
+	img.numWidth = int(nw) - img.dotSize
+	img.numHeight = int(nh)
 }
 
 func (img *Image) drawHorizLine(color image.Color, fromX, toX, y int) {
@@ -163,8 +163,8 @@ func (img *Image) strikeThrough() {
 func (img *Image) drawDigit(digit []byte, x, y int) {
 	skf := rndf(-maxSkew, maxSkew)
 	xs := float64(x)
-	minr := img.dotSize / 2               // minumum radius
-	maxr := img.dotSize/2 + img.dotSize/4 // maximum radius
+	minr := img.dotSize / 2 // minumum radius
+	maxr := img.dotSize     // maximum radius
 	y += rnd(-minr, minr)
 	for yy := 0; yy < fontHeight; yy++ {
 		for xx := 0; xx < fontWidth; xx++ {
