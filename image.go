@@ -161,7 +161,7 @@ func (img *Image) strikeThrough() {
 }
 
 func (img *Image) drawDigit(digit []byte, x, y int) {
-	skf := rand.Float64() * float64(rnd(-maxSkew, maxSkew))
+	skf := rndf(-maxSkew, maxSkew)
 	xs := float64(x)
 	minr := img.dotSize / 2               // minumum radius
 	maxr := img.dotSize/2 + img.dotSize/4 // maximum radius
