@@ -43,10 +43,6 @@ func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, download b
 		}
 		return WriteImage(w, id, h.imgWidth, h.imgHeight)
 	case ".wav":
-		if !download {
-			w.Header().Set("Content-Type", "audio/x-wav")
-		}
-		//return WriteAudio(w, id)
 		//XXX(dchest) Workaround for Chrome: it wants content-length,
 		//or else will start playing NOT from the beginning.
 		//Filed issue: http://code.google.com/p/chromium/issues/detail?id=80565
@@ -55,6 +51,9 @@ func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, download b
 			return ErrNotFound
 		}
 		a := NewAudio(d)
+		if !download {
+			w.Header().Set("Content-Type", "audio/x-wav")
+		}
 		w.Header().Set("Content-Length", strconv.Itoa(a.EncodedLen()))
 		_, err := a.WriteTo(w)
 		return err
@@ -74,11 +73,8 @@ func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Reload(id)
 	}
 	download := path.Base(dir) == "download"
-	if err := h.serve(w, id, ext, download); err != nil {
-		if err == ErrNotFound {
-			http.NotFound(w, r)
-			return
-		}
-		http.Error(w, "error serving captcha", http.StatusInternalServerError)
+	if h.serve(w, id, ext, download) == ErrNotFound {
+		http.NotFound(w, r)
 	}
+	// Ignore other errors.
 }
