@@ -62,7 +62,7 @@ func NewImage(digits []byte, width, height int) *Image {
 	img.strikeThrough()
 	// Apply wave distortion.
 	img.distort(rndf(5, 10), rndf(100, 200))
-	// Draw background (20 random circles of random brightness).
+	// Fill image with random circles.
 	img.fillWithCircles(20, img.dotSize)
 	return img
 }
@@ -155,16 +155,16 @@ func (img *Image) fillWithCircles(n, maxradius int) {
 }
 
 func (img *Image) strikeThrough() {
-	height := img.dotSize
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
 	y := rnd(maxy/3, maxy-maxy/3)
 	amplitude := rndf(5, 20)
 	period := rndf(80, 180)
+	dx := 2.0 * math.Pi / period
 	for x := 0; x < maxx; x++ {
-		xo := amplitude * math.Cos(2.0*math.Pi*float64(y)/period)
-		yo := amplitude * math.Sin(2.0*math.Pi*float64(x)/period)
-		for yn := 0; yn < height; yn++ {
+		xo := amplitude * math.Cos(float64(y)*dx)
+		yo := amplitude * math.Sin(float64(x)*dx)
+		for yn := 0; yn < img.dotSize; yn++ {
 			r := rnd(0, img.dotSize)
 			img.drawCircle(img.primaryColor, x+int(xo), y+int(yo)+(yn*img.dotSize), r/2)
 		}
@@ -174,7 +174,7 @@ func (img *Image) strikeThrough() {
 func (img *Image) drawDigit(digit []byte, x, y int) {
 	skf := rndf(-maxSkew, maxSkew)
 	xs := float64(x)
-	r := img.dotSize/2
+	r := img.dotSize / 2
 	y += rnd(-r, r)
 	for yy := 0; yy < fontHeight; yy++ {
 		for xx := 0; xx < fontWidth; xx++ {
@@ -199,11 +199,12 @@ func (img *Image) distort(amplude float64, period float64) {
 	oldImg := img.NRGBA
 	newImg := image.NewNRGBA(w, h)
 
+	dx := 2.0 * math.Pi / period
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
-			ox := amplude * math.Sin(2.0*math.Pi*float64(y)/period)
-			oy := amplude * math.Cos(2.0*math.Pi*float64(x)/period)
-			newImg.Set(x, y, oldImg.At(x + int(ox), y + int(oy)))
+			ox := amplude * math.Sin(float64(y)*dx)
+			oy := amplude * math.Cos(float64(x)*dx)
+			newImg.Set(x, y, oldImg.At(x+int(ox), y+int(oy)))
 		}
 	}
 	img.NRGBA = newImg
