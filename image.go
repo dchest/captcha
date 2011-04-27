@@ -155,15 +155,15 @@ func (img *Image) fillWithCircles(n, maxradius int) {
 }
 
 func (img *Image) strikeThrough() {
-	wave := rndf(5, 20)
 	height := img.dotSize
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
 	y := rnd(maxy/3, maxy-maxy/3)
+	amplitude := rndf(5, 20)
 	period := rndf(80, 180)
 	for x := 0; x < maxx; x++ {
-		xo := wave * math.Cos(2.0*math.Pi*float64(y)/period)
-		yo := wave * math.Sin(2.0*math.Pi*float64(x)/period)
+		xo := amplitude * math.Cos(2.0*math.Pi*float64(y)/period)
+		yo := amplitude * math.Sin(2.0*math.Pi*float64(x)/period)
 		for yn := 0; yn < height; yn++ {
 			r := rnd(0, img.dotSize)
 			img.drawCircle(img.primaryColor, x+int(xo), y+int(yo)+(yn*img.dotSize), r/2)
