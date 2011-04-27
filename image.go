@@ -14,7 +14,7 @@ const (
 	// Standard width and height of a captcha image.
 	StdWidth  = 240
 	StdHeight = 80
-
+	// Maximum absolute skew factor of a single digit.
 	maxSkew = 0.7
 )
 
@@ -181,10 +181,8 @@ func (img *Image) drawDigit(digit []byte, x, y int) {
 			if digit[yy*fontWidth+xx] != blackChar {
 				continue
 			}
-			// Introduce random variations.
-			ox := x + (xx * img.dotSize) + rnd(0, r/2)
-			oy := y + (yy * img.dotSize) + rnd(0, r/2)
-
+			ox := x + xx*img.dotSize
+			oy := y + yy*img.dotSize
 			img.drawCircle(img.primaryColor, ox, oy, r)
 		}
 		xs += skf
