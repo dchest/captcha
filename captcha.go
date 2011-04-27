@@ -50,8 +50,8 @@ import (
 )
 
 const (
-	// Standard number of digits in captcha.
-	StdLength = 6
+	// Default number of digits in captcha solution.
+	DefaultLen = 6
 	// The number of captchas created that triggers garbage collection used
 	// by default store.
 	CollectNum = 100
@@ -84,9 +84,15 @@ func RandomDigits(length int) []byte {
 	return d
 }
 
-// New creates a new captcha of the given length, saves it in the internal
-// storage, and returns its id.
-func New(length int) (id string) {
+// New creates a new captcha with the standard length, saves it in the internal
+// storage and returns its id.
+func New() string {
+	return NewLen(DefaultLen)
+}
+
+// NewLen is just like New, but accepts length of a captcha solution as the
+// argument.
+func NewLen(length int) (id string) {
 	id = uniuri.New()
 	globalStore.Set(id, RandomDigits(length))
 	return

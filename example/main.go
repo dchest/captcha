@@ -21,7 +21,7 @@ func showFormHandler(w http.ResponseWriter, r *http.Request) {
 		CaptchaId  string
 		JavaScript string
 	}{
-		captcha.New(captcha.StdLength),
+		captcha.New(),
 		formJavaScript,
 	}
 	if err := formTemplate.Execute(w, &d); err != nil {
