@@ -7,7 +7,8 @@ GOFILES=\
 	font.go\
 	image.go\
 	sounds.go\
-	audio.go
+	audio.go\
+	server.go
 
 include $(GOROOT)/src/Make.pkg
 
