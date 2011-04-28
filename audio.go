@@ -196,15 +196,14 @@ func reversedSound(a []byte) []byte {
 }
 
 func makeBackgroundSound(length int) []byte {
-	b := makeWhiteNoise(length, 8)
+	b := makeWhiteNoise(length, 4)
 	for i := 0; i < length/(sampleRate/10); i++ {
 		snd := reverseDigitSounds[rand.Intn(10)]
 		snd = changeSpeed(snd, rndf(0.8, 1.4))
 		place := rand.Intn(len(b) - len(snd))
-		setSoundLevel(snd, rndf(0.5, 1.2))
+		setSoundLevel(snd, rndf(0.2, 0.3))
 		mixSound(b[place:], snd)
 	}
-	setSoundLevel(b, rndf(0.2, 0.3))
 	return b
 }
 
