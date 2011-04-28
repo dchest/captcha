@@ -13,7 +13,7 @@ import (
 var (
 	flagImage = flag.Bool("i", true, "output image captcha")
 	flagAudio = flag.Bool("a", false, "output audio captcha")
-	flagLen   = flag.Int("len", captcha.StdLength, "length of captcha")
+	flagLen   = flag.Int("len", captcha.DefaultLen, "length of captcha")
 	flagImgW  = flag.Int("width", captcha.StdWidth, "image captcha width")
 	flagImgH  = flag.Int("height", captcha.StdHeight, "image captcha height")
 )
