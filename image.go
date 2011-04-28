@@ -81,7 +81,7 @@ func NewImage(digits []byte, width, height int) *Image {
 	// Apply wave distortion.
 	img.distort(rndf(5, 10), rndf(100, 200))
 	// Fill image with random circles.
-	img.fillWithCircles(20, img.dotSize)
+	img.fillWithCircles(circleCount, img.dotSize)
 	return img
 }
 
