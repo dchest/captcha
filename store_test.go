@@ -57,3 +57,21 @@ func TestCollect(t *testing.T) {
 		t.Errorf("= not collected %d out of %d captchas", nc, len(ids))
 	}
 }
+
+
+func BenchmarkSetCollect(b *testing.B) {
+	b.StopTimer()
+	d := RandomDigits(10)
+	s := NewMemoryStore(9999, -1)
+	ids := make([]string, 1000)
+	for i := range ids {
+		ids[i] = uniuri.New()
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 1000; j++ {
+			s.Set(ids[j], d)
+		}
+		s.(*memoryStore).collect()
+	}
+}
