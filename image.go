@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"rand"
-	"time"
 )
 
 const (
@@ -25,10 +24,6 @@ type Image struct {
 	numWidth  int
 	numHeight int
 	dotSize   int
-}
-
-func init() {
-	rand.Seed(time.Seconds())
 }
 
 func randomPalette() image.PalettedColorModel {
@@ -260,9 +255,4 @@ func max3(x, y, z uint8) (o uint8) {
 		o = z
 	}
 	return
-}
-
-// rnd returns a random number in range [from, to].
-func rnd(from, to int) int {
-	return rand.Intn(to+1-from) + from
 }

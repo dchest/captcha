@@ -2,7 +2,6 @@ package captcha
 
 import (
 	"bytes"
-	crand "crypto/rand"
 	"encoding/binary"
 	"math"
 	"os"
@@ -154,11 +153,6 @@ func changeSpeed(a []byte, speed float64) []byte {
 	return b
 }
 
-// rndf returns a random float64 number in range [from, to].
-func rndf(from, to float64) float64 {
-	return (to-from)*rand.Float64() + from
-}
-
 func randomSpeed(a []byte) []byte {
 	pitch := rndf(0.9, 1.2)
 	return changeSpeed(a, pitch)
@@ -173,10 +167,7 @@ func makeSilence(length int) []byte {
 }
 
 func makeWhiteNoise(length int, level uint8) []byte {
-	noise := make([]byte, length)
-	if _, err := io.ReadFull(crand.Reader, noise); err != nil {
-		panic("error reading from random source: " + err.String())
-	}
+	noise := randomBytes(length)
 	adj := 128 - level/2
 	for i, v := range noise {
 		v %= level

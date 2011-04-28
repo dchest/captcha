@@ -109,8 +109,9 @@ argument.
 
 	func RandomDigits(length int) []byte
 	
-RandomDigits returns a byte slice of the given length containing random
-digits in range 0-9.
+RandomDigits returns a byte slice of the given length containing pseudorandom
+numbers in range 0-9. The slice can be used as a captcha solution.
+
 
 ### func Reload
 

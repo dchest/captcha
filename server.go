@@ -18,13 +18,13 @@ type captchaHandler struct {
 // path component: file name part must contain a captcha id, file extension —
 // its format (PNG or WAV).
 //
-// For example, for file name "B9QTvDV1RXbVJ3Ac.png" it serves an image captcha
-// with id "B9QTvDV1RXbVJ3Ac", and for "B9QTvDV1RXbVJ3Ac.wav" it serves the
+// For example, for file name "LBm5vMjHDtdUfaWYXiQX.png" it serves an image captcha
+// with id "LBm5vMjHDtdUfaWYXiQX", and for "LBm5vMjHDtdUfaWYXiQX.wav" it serves the
 // same captcha in audio format.
 //
 // To serve a captcha as a downloadable file, the URL must be constructed in
 // such a way as if the file to serve is in the "download" subdirectory:
-// "/download/B9QTvDV1RXbVJ3Ac.wav".
+// "/download/LBm5vMjHDtdUfaWYXiQX.wav".
 //
 // To reload captcha (get a different solution for the same captcha id), append
 // "?reload=x" to URL, where x may be anything (for example, current time or a
