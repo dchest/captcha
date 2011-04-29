@@ -123,36 +123,36 @@ func (img *Image) calculateSizes(width, height, ncount int) {
 	img.numHeight = int(nh)
 }
 
-func (img *Image) drawHorizLine(fromX, toX, y int, colorIndex uint8) {
+func (img *Image) drawHorizLine(fromX, toX, y int, colorIdx uint8) {
 	for x := fromX; x <= toX; x++ {
-		img.SetColorIndex(x, y, colorIndex)
+		img.SetColorIndex(x, y, colorIdx)
 	}
 }
 
-func (img *Image) drawCircle(x, y, radius int, colorIndex uint8) {
+func (img *Image) drawCircle(x, y, radius int, colorIdx uint8) {
 	f := 1 - radius
 	dfx := 1
 	dfy := -2 * radius
-	xx := 0
-	yy := radius
+	xo := 0
+	yo := radius
 
-	img.SetColorIndex(x, y+radius, colorIndex)
-	img.SetColorIndex(x, y-radius, colorIndex)
-	img.drawHorizLine(x-radius, x+radius, y, colorIndex)
+	img.SetColorIndex(x, y+radius, colorIdx)
+	img.SetColorIndex(x, y-radius, colorIdx)
+	img.drawHorizLine(x-radius, x+radius, y, colorIdx)
 
-	for xx < yy {
+	for xo < yo {
 		if f >= 0 {
-			yy--
+			yo--
 			dfy += 2
 			f += dfy
 		}
-		xx++
+		xo++
 		dfx += 2
 		f += dfx
-		img.drawHorizLine(x-xx, x+xx, y+yy, colorIndex)
-		img.drawHorizLine(x-xx, x+xx, y-yy, colorIndex)
-		img.drawHorizLine(x-yy, x+yy, y+xx, colorIndex)
-		img.drawHorizLine(x-yy, x+yy, y-xx, colorIndex)
+		img.drawHorizLine(x-xo, x+xo, y+yo, colorIdx)
+		img.drawHorizLine(x-xo, x+xo, y-yo, colorIdx)
+		img.drawHorizLine(x-yo, x+yo, y+xo, colorIdx)
+		img.drawHorizLine(x-yo, x+yo, y-xo, colorIdx)
 	}
 }
 
@@ -160,9 +160,9 @@ func (img *Image) fillWithCircles(n, maxradius int) {
 	maxx := img.Bounds().Max.X
 	maxy := img.Bounds().Max.Y
 	for i := 0; i < n; i++ {
-		colorIndex := uint8(rnd(1, circleCount-1))
+		colorIdx := uint8(rnd(1, circleCount-1))
 		r := rnd(1, maxradius)
-		img.drawCircle(rnd(r, maxx-r), rnd(r, maxy-r), r, colorIndex)
+		img.drawCircle(rnd(r, maxx-r), rnd(r, maxy-r), r, colorIdx)
 	}
 }
 
@@ -188,14 +188,12 @@ func (img *Image) drawDigit(digit []byte, x, y int) {
 	xs := float64(x)
 	r := img.dotSize / 2
 	y += rnd(-r, r)
-	for yy := 0; yy < fontHeight; yy++ {
-		for xx := 0; xx < fontWidth; xx++ {
-			if digit[yy*fontWidth+xx] != blackChar {
+	for yo := 0; yo < fontHeight; yo++ {
+		for xo := 0; xo < fontWidth; xo++ {
+			if digit[yo*fontWidth+xo] != blackChar {
 				continue
 			}
-			ox := x + xx*img.dotSize
-			oy := y + yy*img.dotSize
-			img.drawCircle(ox, oy, r, 1)
+			img.drawCircle(x+xo*img.dotSize, y+yo*img.dotSize, r, 1)
 		}
 		xs += skf
 		x = int(xs)
@@ -212,9 +210,9 @@ func (img *Image) distort(amplude float64, period float64) {
 	dx := 2.0 * math.Pi / period
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
-			ox := amplude * math.Sin(float64(y)*dx)
-			oy := amplude * math.Cos(float64(x)*dx)
-			newImg.SetColorIndex(x, y, oldImg.ColorIndexAt(x+int(ox), y+int(oy)))
+			xo := amplude * math.Sin(float64(y)*dx)
+			yo := amplude * math.Cos(float64(x)*dx)
+			newImg.SetColorIndex(x, y, oldImg.ColorIndexAt(x+int(xo), y+int(yo)))
 		}
 	}
 	img.Paletted = newImg
@@ -235,24 +233,24 @@ func randomBrightness(c image.RGBAColor, max uint8) image.RGBAColor {
 	}
 }
 
-func min3(x, y, z uint8) (o uint8) {
-	o = x
-	if y < o {
-		o = y
+func min3(x, y, z uint8) (m uint8) {
+	m = x
+	if y < m {
+		m = y
 	}
-	if z < o {
-		o = z
+	if z < m {
+		m = z
 	}
 	return
 }
 
-func max3(x, y, z uint8) (o uint8) {
-	o = x
-	if y > o {
-		o = y
+func max3(x, y, z uint8) (m uint8) {
+	m = x
+	if y > m {
+		m = y
 	}
-	if z > o {
-		o = z
+	if z > m {
+		m = z
 	}
 	return
 }
