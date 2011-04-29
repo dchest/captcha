@@ -14,7 +14,7 @@ const idLen = 20
 var idChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
 
 func init() {
-	rand.Seed(time.Seconds())
+	rand.Seed(time.Nanoseconds())
 }
 
 // RandomDigits returns a byte slice of the given length containing
