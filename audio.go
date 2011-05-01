@@ -86,18 +86,27 @@ func NewAudio(digits []byte) *Audio {
 // WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 // returns the number of bytes written and an error if any.
 func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
+	// Header.
 	nn, err := w.Write(waveHeader)
 	n = int64(nn)
 	if err != nil {
 		return
 	}
+	// Chunk length.
 	err = binary.Write(w, binary.LittleEndian, uint32(a.body.Len()))
 	if err != nil {
 		return
 	}
 	nn += 4
+	// Chunk data.
 	n, err = a.body.WriteTo(w)
 	n += int64(nn)
+	// Pad byte if chunk length is odd.
+	// (As header has even length, we can check if n is odd, not chunk).
+	if n % 2 != 0 {
+		w.Write([]byte{128})
+		n++
+	}
 	return
 }
 
