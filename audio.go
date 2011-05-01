@@ -86,19 +86,27 @@ func NewAudio(digits []byte) *Audio {
 // WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 // returns the number of bytes written and an error if any.
 func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
+	// Calculate padded length of PCM chunk data.
+	bodyLen := uint32(a.body.Len())
+	paddedBodyLen := bodyLen
+	if bodyLen % 2 != 0 {
+		paddedBodyLen++
+	}
+	totalLen := uint32(len(waveHeader)) - 4 + paddedBodyLen
 	// Header.
-	nn, err := w.Write(waveHeader)
+	header := make([]byte, len(waveHeader) + 4) // includes 4 bytes for chunk size
+	copy(header, waveHeader)
+	// Put the length of whole RIFF chunk.
+	binary.LittleEndian.PutUint32(header[4:], totalLen)
+	// Put the length of WAVE chunk.
+	binary.LittleEndian.PutUint32(header[len(waveHeader):], bodyLen)
+	// Write header.
+	nn, err := w.Write(header)
 	n = int64(nn)
 	if err != nil {
 		return
 	}
-	// Chunk length.
-	err = binary.Write(w, binary.LittleEndian, uint32(a.body.Len()))
-	if err != nil {
-		return
-	}
-	nn += 4
-	// Chunk data.
+	// Write data.
 	n, err = a.body.WriteTo(w)
 	n += int64(nn)
 	if err != nil {
@@ -106,7 +114,7 @@ func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
 	}
 	// Pad byte if chunk length is odd.
 	// (As header has even length, we can check if n is odd, not chunk).
-	if n % 2 != 0 {
+	if bodyLen != paddedBodyLen {
 		w.Write([]byte{0})
 		n++
 	}
