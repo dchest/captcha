@@ -101,10 +101,13 @@ func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
 	// Chunk data.
 	n, err = a.body.WriteTo(w)
 	n += int64(nn)
+	if err != nil {
+		return
+	}
 	// Pad byte if chunk length is odd.
 	// (As header has even length, we can check if n is odd, not chunk).
 	if n % 2 != 0 {
-		w.Write([]byte{128})
+		w.Write([]byte{0})
 		n++
 	}
 	return
