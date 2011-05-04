@@ -212,7 +212,7 @@ func makeBackgroundSound(length int) []byte {
 		snd := reverseDigitSounds[rand.Intn(10)]
 		snd = changeSpeed(snd, rndf(0.8, 1.4))
 		place := rand.Intn(len(b) - len(snd))
-		setSoundLevel(snd, rndf(0.2, 0.3))
+		setSoundLevel(snd, rndf(0.2, 0.5))
 		mixSound(b[place:], snd)
 	}
 	return b
@@ -220,6 +220,6 @@ func makeBackgroundSound(length int) []byte {
 
 func randomizedDigitSound(n byte) []byte {
 	s := randomSpeed(digitSounds[n])
-	setSoundLevel(s, rndf(0.7, 1.3))
+	setSoundLevel(s, rndf(0.75, 1.2))
 	return s
 }
