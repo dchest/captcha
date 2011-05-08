@@ -52,12 +52,12 @@ func randomPalette() image.PalettedColorModel {
 // NewImage returns a new captcha image of the given width and height with the
 // given digits, where each digit must be in range 0-9.
 func NewImage(digits []byte, width, height int) *Image {
-	img := new(Image)
-	img.Paletted = image.NewPaletted(width, height, randomPalette())
-	img.calculateSizes(width, height, len(digits))
+	m := new(Image)
+	m.Paletted = image.NewPaletted(width, height, randomPalette())
+	m.calculateSizes(width, height, len(digits))
 	// Randomly position captcha inside the image.
-	maxx := width - (img.numWidth+img.dotSize)*len(digits) - img.dotSize
-	maxy := height - img.numHeight - img.dotSize*2
+	maxx := width - (m.numWidth+m.dotSize)*len(digits) - m.dotSize
+	maxy := height - m.numHeight - m.dotSize*2
 	var border int
 	if width > height {
 		border = height / 5
@@ -68,16 +68,16 @@ func NewImage(digits []byte, width, height int) *Image {
 	y := rnd(border, maxy-border)
 	// Draw digits.
 	for _, n := range digits {
-		img.drawDigit(font[n], x, y)
-		x += img.numWidth + img.dotSize
+		m.drawDigit(font[n], x, y)
+		x += m.numWidth + m.dotSize
 	}
 	// Draw strike-through line.
-	img.strikeThrough()
+	m.strikeThrough()
 	// Apply wave distortion.
-	img.distort(rndf(5, 10), rndf(100, 200))
+	m.distort(rndf(5, 10), rndf(100, 200))
 	// Fill image with random circles.
-	img.fillWithCircles(circleCount, img.dotSize)
-	return img
+	m.fillWithCircles(circleCount, m.dotSize)
+	return m
 }
 
 // BUG(dchest): While Image conforms to io.WriterTo interface, its WriteTo
@@ -85,11 +85,11 @@ func NewImage(digits []byte, width, height int) *Image {
 // doesn't report this.
 
 // WriteTo writes captcha image in PNG format into the given writer.
-func (img *Image) WriteTo(w io.Writer) (int64, os.Error) {
-	return 0, png.Encode(w, img.Paletted)
+func (m *Image) WriteTo(w io.Writer) (int64, os.Error) {
+	return 0, png.Encode(w, m.Paletted)
 }
 
-func (img *Image) calculateSizes(width, height, ncount int) {
+func (m *Image) calculateSizes(width, height, ncount int) {
 	// Goal: fit all digits inside the image.
 	var border int
 	if width > height {
@@ -116,29 +116,29 @@ func (img *Image) calculateSizes(width, height, ncount int) {
 		nw = fw / fh * nh
 	}
 	// Calculate dot size.
-	img.dotSize = int(nh / fh)
+	m.dotSize = int(nh / fh)
 	// Save everything, making the actual width smaller by 1 dot to account
 	// for spacing between digits.
-	img.numWidth = int(nw) - img.dotSize
-	img.numHeight = int(nh)
+	m.numWidth = int(nw) - m.dotSize
+	m.numHeight = int(nh)
 }
 
-func (img *Image) drawHorizLine(fromX, toX, y int, colorIdx uint8) {
+func (m *Image) drawHorizLine(fromX, toX, y int, colorIdx uint8) {
 	for x := fromX; x <= toX; x++ {
-		img.SetColorIndex(x, y, colorIdx)
+		m.SetColorIndex(x, y, colorIdx)
 	}
 }
 
-func (img *Image) drawCircle(x, y, radius int, colorIdx uint8) {
+func (m *Image) drawCircle(x, y, radius int, colorIdx uint8) {
 	f := 1 - radius
 	dfx := 1
 	dfy := -2 * radius
 	xo := 0
 	yo := radius
 
-	img.SetColorIndex(x, y+radius, colorIdx)
-	img.SetColorIndex(x, y-radius, colorIdx)
-	img.drawHorizLine(x-radius, x+radius, y, colorIdx)
+	m.SetColorIndex(x, y+radius, colorIdx)
+	m.SetColorIndex(x, y-radius, colorIdx)
+	m.drawHorizLine(x-radius, x+radius, y, colorIdx)
 
 	for xo < yo {
 		if f >= 0 {
@@ -149,26 +149,26 @@ func (img *Image) drawCircle(x, y, radius int, colorIdx uint8) {
 		xo++
 		dfx += 2
 		f += dfx
-		img.drawHorizLine(x-xo, x+xo, y+yo, colorIdx)
-		img.drawHorizLine(x-xo, x+xo, y-yo, colorIdx)
-		img.drawHorizLine(x-yo, x+yo, y+xo, colorIdx)
-		img.drawHorizLine(x-yo, x+yo, y-xo, colorIdx)
+		m.drawHorizLine(x-xo, x+xo, y+yo, colorIdx)
+		m.drawHorizLine(x-xo, x+xo, y-yo, colorIdx)
+		m.drawHorizLine(x-yo, x+yo, y+xo, colorIdx)
+		m.drawHorizLine(x-yo, x+yo, y-xo, colorIdx)
 	}
 }
 
-func (img *Image) fillWithCircles(n, maxradius int) {
-	maxx := img.Bounds().Max.X
-	maxy := img.Bounds().Max.Y
+func (m *Image) fillWithCircles(n, maxradius int) {
+	maxx := m.Bounds().Max.X
+	maxy := m.Bounds().Max.Y
 	for i := 0; i < n; i++ {
 		colorIdx := uint8(rnd(1, circleCount-1))
 		r := rnd(1, maxradius)
-		img.drawCircle(rnd(r, maxx-r), rnd(r, maxy-r), r, colorIdx)
+		m.drawCircle(rnd(r, maxx-r), rnd(r, maxy-r), r, colorIdx)
 	}
 }
 
-func (img *Image) strikeThrough() {
-	maxx := img.Bounds().Max.X
-	maxy := img.Bounds().Max.Y
+func (m *Image) strikeThrough() {
+	maxx := m.Bounds().Max.X
+	maxy := m.Bounds().Max.Y
 	y := rnd(maxy/3, maxy-maxy/3)
 	amplitude := rndf(5, 20)
 	period := rndf(80, 180)
@@ -176,46 +176,46 @@ func (img *Image) strikeThrough() {
 	for x := 0; x < maxx; x++ {
 		xo := amplitude * math.Cos(float64(y)*dx)
 		yo := amplitude * math.Sin(float64(x)*dx)
-		for yn := 0; yn < img.dotSize; yn++ {
-			r := rnd(0, img.dotSize)
-			img.drawCircle(x+int(xo), y+int(yo)+(yn*img.dotSize), r/2, 1)
+		for yn := 0; yn < m.dotSize; yn++ {
+			r := rnd(0, m.dotSize)
+			m.drawCircle(x+int(xo), y+int(yo)+(yn*m.dotSize), r/2, 1)
 		}
 	}
 }
 
-func (img *Image) drawDigit(digit []byte, x, y int) {
+func (m *Image) drawDigit(digit []byte, x, y int) {
 	skf := rndf(-maxSkew, maxSkew)
 	xs := float64(x)
-	r := img.dotSize / 2
+	r := m.dotSize / 2
 	y += rnd(-r, r)
 	for yo := 0; yo < fontHeight; yo++ {
 		for xo := 0; xo < fontWidth; xo++ {
 			if digit[yo*fontWidth+xo] != blackChar {
 				continue
 			}
-			img.drawCircle(x+xo*img.dotSize, y+yo*img.dotSize, r, 1)
+			m.drawCircle(x+xo*m.dotSize, y+yo*m.dotSize, r, 1)
 		}
 		xs += skf
 		x = int(xs)
 	}
 }
 
-func (img *Image) distort(amplude float64, period float64) {
-	w := img.Bounds().Max.X
-	h := img.Bounds().Max.Y
+func (m *Image) distort(amplude float64, period float64) {
+	w := m.Bounds().Max.X
+	h := m.Bounds().Max.Y
 
-	oldImg := img.Paletted
-	newImg := image.NewPaletted(w, h, oldImg.Palette)
+	oldm := m.Paletted
+	newm := image.NewPaletted(w, h, oldm.Palette)
 
 	dx := 2.0 * math.Pi / period
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
 			xo := amplude * math.Sin(float64(y)*dx)
 			yo := amplude * math.Cos(float64(x)*dx)
-			newImg.SetColorIndex(x, y, oldImg.ColorIndexAt(x+int(xo), y+int(yo)))
+			newm.SetColorIndex(x, y, oldm.ColorIndexAt(x+int(xo), y+int(yo)))
 		}
 	}
-	img.Paletted = newImg
+	m.Paletted = newm
 }
 
 func randomBrightness(c image.RGBAColor, max uint8) image.RGBAColor {
