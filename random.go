@@ -32,7 +32,7 @@ func RandomDigits(length int) (b []byte) {
 func randomBytes(length int) (b []byte) {
 	b = make([]byte, length)
 	if _, err := io.ReadFull(crand.Reader, b); err != nil {
-		panic("error reading random source: " + err.String())
+		panic("captcha: error reading random source: " + err.String())
 	}
 	return
 }
