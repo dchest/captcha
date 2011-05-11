@@ -10,7 +10,7 @@ func BenchmarkNewAudio(b *testing.B) {
 	d := RandomDigits(DefaultLen)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		NewAudio(d)
+		NewAudio(d, "")
 	}
 }
 
@@ -19,7 +19,7 @@ func BenchmarkAudioWriteTo(b *testing.B) {
 	d := RandomDigits(DefaultLen)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		a := NewAudio(d)
+		a := NewAudio(d, "")
 		n, _ := a.WriteTo(ioutil.Discard)
 		b.SetBytes(n)
 	}

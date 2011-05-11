@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 )
 
 type captchaHandler struct {
@@ -30,11 +31,15 @@ type captchaHandler struct {
 // "?reload=x" to URL, where x may be anything (for example, current time or a
 // random number to make browsers refetch an image instead of loading it from
 // cache).
+//
+// By default, the Server serves audio in English language. To serve audio
+// captcha in one of the other supported languages, append "lang" value, for
+// example, "?lang=ru".
 func Server(imgWidth, imgHeight int) http.Handler { 
 	return &captchaHandler{imgWidth, imgHeight}
 }
 
-func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, download bool) os.Error {
+func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, lang string, download bool) os.Error {
 	if download {
 		w.Header().Set("Content-Type", "application/octet-stream")
 	}
@@ -52,7 +57,7 @@ func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, download b
 		if d == nil {
 			return ErrNotFound
 		}
-		a := NewAudio(d)
+		a := NewAudio(d, lang)
 		if !download {
 			w.Header().Set("Content-Type", "audio/x-wav")
 		}
@@ -74,8 +79,9 @@ func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("reload") != "" {
 		Reload(id)
 	}
+	lang := strings.ToLower(r.FormValue("lang"))
 	download := path.Base(dir) == "download"
-	if h.serve(w, id, ext, download) == ErrNotFound {
+	if h.serve(w, id, ext, lang, download) == ErrNotFound {
 		http.NotFound(w, r)
 	}
 	// Ignore other errors.

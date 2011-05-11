@@ -12,23 +12,11 @@ import (
 const sampleRate = 8000 // Hz
 
 var (
-	longestDigitSndLen int
-	endingBeepSound    []byte
-	reverseDigitSounds [][]byte
+	endingBeepSound []byte
 )
 
 func init() {
-	for _, v := range digitSounds {
-		if longestDigitSndLen < len(v) {
-			longestDigitSndLen = len(v)
-		}
-	}
 	endingBeepSound = changeSpeed(beepSound, 1.4)
-	// Preallocate reversed digit sounds for background noise.
-	reverseDigitSounds = make([][]byte, len(digitSounds))
-	for i, v := range digitSounds {
-		reverseDigitSounds[i] = reversedSound(v)
-	}
 }
 
 // BUG(dchest): [Not our bug] Google Chrome 10 plays unsigned 8-bit PCM WAVE
@@ -38,15 +26,23 @@ func init() {
 
 type Audio struct {
 	body *bytes.Buffer
+	digitSounds [][]byte
 }
 
 // NewImage returns a new audio captcha with the given digits, where each digit
-// must be in range 0-9.
-func NewAudio(digits []byte) *Audio {
+// must be in range 0-9. Digits are pronounced in the given language. If there
+// are no sounds for the given language, English is used.
+func NewAudio(digits []byte, lang string) *Audio {
+	a := new(Audio)
+	if sounds, ok := digitSounds[lang]; ok {
+		a.digitSounds = sounds
+	} else {
+		a.digitSounds = digitSounds["en"]
+	}
 	numsnd := make([][]byte, len(digits))
 	nsdur := 0
 	for i, n := range digits {
-		snd := randomizedDigitSound(n)
+		snd := a.randomizedDigitSound(n)
 		nsdur += len(snd)
 		numsnd[i] = snd
 	}
@@ -59,9 +55,8 @@ func NewAudio(digits []byte) *Audio {
 		intervals[i] = dur
 	}
 	// Generate background sound.
-	bg := makeBackgroundSound(longestDigitSndLen*len(digits) + intdur)
+	bg := a.makeBackgroundSound(a.longestDigitSndLen()*len(digits) + intdur)
 	// Create buffer and write audio to it.
-	a := new(Audio)
 	sil := makeSilence(sampleRate / 5)
 	bufcap := 3*len(beepSound) + 2*len(sil) + len(bg) + len(endingBeepSound)
 	a.body = bytes.NewBuffer(make([]byte, 0, bufcap))
@@ -89,12 +84,12 @@ func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
 	// Calculate padded length of PCM chunk data.
 	bodyLen := uint32(a.body.Len())
 	paddedBodyLen := bodyLen
-	if bodyLen % 2 != 0 {
+	if bodyLen%2 != 0 {
 		paddedBodyLen++
 	}
 	totalLen := uint32(len(waveHeader)) - 4 + paddedBodyLen
 	// Header.
-	header := make([]byte, len(waveHeader) + 4) // includes 4 bytes for chunk size
+	header := make([]byte, len(waveHeader)+4) // includes 4 bytes for chunk size
 	copy(header, waveHeader)
 	// Put the length of whole RIFF chunk.
 	binary.LittleEndian.PutUint32(header[4:], totalLen)
@@ -124,6 +119,34 @@ func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
 // EncodedLen returns the length of WAV-encoded audio captcha.
 func (a *Audio) EncodedLen() int {
 	return len(waveHeader) + 4 + a.body.Len()
+}
+
+func (a *Audio) makeBackgroundSound(length int) []byte {
+	b := makeWhiteNoise(length, 4)
+	for i := 0; i < length/(sampleRate/10); i++ {
+		snd := reversedSound(a.digitSounds[rand.Intn(10)])
+		snd = changeSpeed(snd, rndf(0.8, 1.4))
+		place := rand.Intn(len(b) - len(snd))
+		setSoundLevel(snd, rndf(0.2, 0.5))
+		mixSound(b[place:], snd)
+	}
+	return b
+}
+
+func (a *Audio) randomizedDigitSound(n byte) []byte {
+	s := randomSpeed(a.digitSounds[n])
+	setSoundLevel(s, rndf(0.75, 1.2))
+	return s
+}
+
+func (a *Audio) longestDigitSndLen() int {
+	n := 0
+	for _, v := range a.digitSounds {
+		if n < len(v) {
+			n = len(v)
+		}
+	}
+	return n
 }
 
 // mixSound mixes src into dst. Dst must have length equal to or greater than
@@ -204,22 +227,4 @@ func reversedSound(a []byte) []byte {
 		b[n-1-i] = v
 	}
 	return b
-}
-
-func makeBackgroundSound(length int) []byte {
-	b := makeWhiteNoise(length, 4)
-	for i := 0; i < length/(sampleRate/10); i++ {
-		snd := reverseDigitSounds[rand.Intn(10)]
-		snd = changeSpeed(snd, rndf(0.8, 1.4))
-		place := rand.Intn(len(b) - len(snd))
-		setSoundLevel(snd, rndf(0.2, 0.5))
-		mixSound(b[place:], snd)
-	}
-	return b
-}
-
-func randomizedDigitSound(n byte) []byte {
-	s := randomSpeed(digitSounds[n])
-	setSoundLevel(s, rndf(0.75, 1.2))
-	return s
 }
