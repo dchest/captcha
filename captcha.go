@@ -7,8 +7,8 @@
 // An image representation is a PNG-encoded image with the solution printed on
 // it in such a way that makes it hard for computers to solve it using OCR.
 //
-// An audio representation is a WAVE-encoded (8 kHz unsigned 8-bit) sound
-// with the spoken solution (currently in English). To make it hard for
+// An audio representation is a WAVE-encoded (8 kHz unsigned 8-bit) sound with
+// the spoken solution (currently in English and Russian). To make it hard for
 // computers to solve audio captcha, the voice that pronounces numbers has
 // random speed and pitch, and there is a randomly generated background noise
 // mixed into the sound.
