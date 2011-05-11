@@ -12,8 +12,8 @@ There are two captcha representations: image and audio.
 An image representation is a PNG-encoded image with the solution printed on
 it in such a way that makes it hard for computers to solve it using OCR.
 
-An audio representation is a WAVE-encoded (8 kHz unsigned 8-bit) sound
-with the spoken solution (currently in English). To make it hard for
+An audio representation is a WAVE-encoded (8 kHz unsigned 8-bit) sound with
+the spoken solution (currently in English and Russian). To make it hard for
 computers to solve audio captcha, the voice that pronounces numbers has
 random speed and pitch, and there is a randomly generated background noise
 mixed into the sound.
@@ -66,7 +66,6 @@ const (
     CollectNum = 100
     // Expiration time of captchas used by default store.
     Expiration = 10 * 60 // 10 minutes
-
 )
 ```
 
@@ -83,7 +82,9 @@ Variables
 ---------
 
 ``` go
-var ErrNotFound = os.NewError("captcha with the given id not found")
+var (
+    ErrNotFound = os.NewError("captcha: id not found")
+)
 ```
 
 
@@ -107,11 +108,11 @@ argument.
 
 ### func RandomDigits
 
-	func RandomDigits(length int) []byte
+	func RandomDigits(length int) (b []byte)
 	
-RandomDigits returns a byte slice of the given length containing pseudorandom
-numbers in range 0-9. The slice can be used as a captcha solution.
-
+RandomDigits returns a byte slice of the given length containing
+pseudorandom numbers in range 0-9. The slice can be used as a captcha
+solution.
 
 ### func Reload
 
@@ -134,18 +135,22 @@ arguments. The server decides which captcha to serve based on the last URL
 path component: file name part must contain a captcha id, file extension —
 its format (PNG or WAV).
 
-For example, for file name "B9QTvDV1RXbVJ3Ac.png" it serves an image captcha
-with id "B9QTvDV1RXbVJ3Ac", and for "B9QTvDV1RXbVJ3Ac.wav" it serves the
+For example, for file name "LBm5vMjHDtdUfaWYXiQX.png" it serves an image captcha
+with id "LBm5vMjHDtdUfaWYXiQX", and for "LBm5vMjHDtdUfaWYXiQX.wav" it serves the
 same captcha in audio format.
 
 To serve a captcha as a downloadable file, the URL must be constructed in
 such a way as if the file to serve is in the "download" subdirectory:
-"/download/B9QTvDV1RXbVJ3Ac.wav".
+"/download/LBm5vMjHDtdUfaWYXiQX.wav".
 
 To reload captcha (get a different solution for the same captcha id), append
 "?reload=x" to URL, where x may be anything (for example, current time or a
 random number to make browsers refetch an image instead of loading it from
 cache).
+
+By default, the Server serves audio in English language. To serve audio
+captcha in one of the other supported languages, append "lang" value, for
+example, "?lang=ru".
 
 ### func SetCustomStore
 
@@ -174,10 +179,11 @@ digits and listed above, will cause the function to return false.
 
 ### func WriteAudio
 
-	func WriteAudio(w io.Writer, id string) os.Error
+	func WriteAudio(w io.Writer, id string, lang string) os.Error
 	
 WriteAudio writes WAV-encoded audio representation of the captcha with the
-given id.
+given id and the given language. If there are no sounds for the given
+language, English is used.
 
 ### func WriteImage
 
@@ -199,10 +205,11 @@ type Audio struct {
 
 ### func NewAudio
 
-	func NewAudio(digits []byte) *Audio
+	func NewAudio(digits []byte, lang string) *Audio
 	
 NewImage returns a new audio captcha with the given digits, where each digit
-must be in range 0-9.
+must be in range 0-9. Digits are pronounced in the given language. If there
+are no sounds for the given language, English is used.
 
 ### func (*Audio) EncodedLen
 
@@ -219,7 +226,7 @@ returns the number of bytes written and an error if any.
 
 ``` go
 type Image struct {
-    *image.NRGBA
+    *image.Paletted
     // contains unexported fields
 }
 ```
@@ -234,7 +241,7 @@ given digits, where each digit must be in range 0-9.
 
 ### func (*Image) WriteTo
 
-	func (img *Image) WriteTo(w io.Writer) (int64, os.Error)
+	func (m *Image) WriteTo(w io.Writer) (int64, os.Error)
 	
 WriteTo writes captcha image in PNG format into the given writer.
 
@@ -285,4 +292,3 @@ Subdirectories
 * capgen
 * example
 * generate
-
