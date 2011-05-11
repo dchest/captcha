@@ -14,6 +14,8 @@ import (
 
 const headerLen = 44
 
+var langs = []string{"en", "ru"}
+
 func writeVar(w io.Writer, b []byte, prefix string) {
 	i := 0
 	for j, v := range b {
@@ -81,7 +83,9 @@ var waveHeader = []byte{
 
 `)
 	fmt.Fprintf(pcm, "var digitSounds = map[string][][]byte{\n")
-	writeDigitSounds(pcm, "en")
+	for _, lang := range langs {
+		writeDigitSounds(pcm, lang)
+	}
 	fmt.Fprintf(pcm, "}")
 	writeSingle(pcm, "beep")
 }
