@@ -9,7 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"path"
+	"path/filepath"
 )
 
 const headerLen = 44
@@ -56,14 +56,14 @@ func writeDigitSounds(pcm io.Writer, lang string) {
 	fmt.Fprintf(pcm, "\t\"%s\" : [][]byte{\n", lang)
 	for i := 0; i <= 9; i++ {
 		fmt.Fprintf(pcm, "\t\t{ // %d\n\t\t\t", i)
-		writeFileRep(pcm, path.Join(lang, fmt.Sprintf("%d.wav", i)), "\t\t\t")
+		writeFileRep(pcm, filepath.Join(lang, fmt.Sprintf("%d.wav", i)), "\t\t\t")
 		fmt.Fprintf(pcm, "\t\t},\n")
 	}
 	fmt.Fprintf(pcm, "\t},\n")
 }
 
 func main() {
-	pcm, err := os.Create(path.Join("..", "sounds.go"))
+	pcm, err := os.Create(filepath.Join("..", "sounds.go"))
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
