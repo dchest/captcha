@@ -86,6 +86,6 @@ var waveHeader = []byte{
 	for _, lang := range langs {
 		writeDigitSounds(pcm, lang)
 	}
-	fmt.Fprintf(pcm, "}")
+	fmt.Fprintf(pcm, "}\n")
 	writeSingle(pcm, "beep")
 }
