@@ -1,3 +1,7 @@
+// Copyright 2011 Dmitry Chestnykh. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 // example of HTTP server that uses the captcha package.
 package main
 
