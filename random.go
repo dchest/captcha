@@ -24,12 +24,8 @@ func init() {
 // RandomDigits returns a byte slice of the given length containing
 // pseudorandom numbers in range 0-9. The slice can be used as a captcha
 // solution.
-func RandomDigits(length int) (b []byte) {
-	b = randomBytes(length)
-	for i := range b {
-		b[i] %= 10
-	}
-	return
+func RandomDigits(length int) []byte {
+	return randomBytesMod(length, 10)
 }
 
 // randomBytes returns a byte slice of the given length read from CSPRNG.
@@ -41,12 +37,34 @@ func randomBytes(length int) (b []byte) {
 	return
 }
 
+// randomBytesMod returns a byte slice of the given length, where each byte is
+// a random number modulo mod.
+func randomBytesMod(length int, mod byte) (b []byte) {
+	b = make([]byte, length)
+	maxrb := byte(256 - (256 % int(mod)))
+	i := 0
+	for {
+		r := randomBytes(length + (length / 4))
+		for _, c := range r {
+			if c >= maxrb {
+				// Skip this number to avoid modulo bias.
+				continue
+			}
+			b[i] = c % mod
+			i++
+			if i == length {
+				return
+			}
+		}
+	}
+	panic("unreachable")
+}
+
 // randomId returns a new random id string.
 func randomId() string {
-	b := randomBytes(idLen)
-	alen := byte(len(idChars))
+	b := randomBytesMod(idLen, byte(len(idChars)))
 	for i, c := range b {
-		b[i] = idChars[c%alen]
+		b[i] = idChars[c]
 	}
 	return string(b)
 }
