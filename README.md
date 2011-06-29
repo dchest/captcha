@@ -276,11 +276,6 @@ store must be registered with SetCustomStore to replace the default one.
 Bugs
 ----
 
-* [Not our bug] Google Chrome 10 plays unsigned 8-bit PCM WAVE
-audio on Mac with horrible distortions.  Issue:
-http://code.google.com/p/chromium/issues/detail?id=70730.
-This has been fixed, and version 12 will play them properly.
-
 * While Image conforms to io.WriterTo interface, its WriteTo
 method returns 0 instead of the actual bytes written because png.Encode
 doesn't report this.
