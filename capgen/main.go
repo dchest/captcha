@@ -17,6 +17,7 @@ import (
 var (
 	flagImage = flag.Bool("i", true, "output image captcha")
 	flagAudio = flag.Bool("a", false, "output audio captcha")
+	flagLang  = flag.String("lang", "en", "language for audio captcha")
 	flagLen   = flag.Int("len", captcha.DefaultLen, "length of captcha")
 	flagImgW  = flag.Int("width", captcha.StdWidth, "image captcha width")
 	flagImgH  = flag.Int("height", captcha.StdHeight, "image captcha height")
@@ -43,7 +44,7 @@ func main() {
 	d := captcha.RandomDigits(*flagLen)
 	switch {
 	case *flagAudio:
-		w = captcha.NewAudio(d)
+		w = captcha.NewAudio(d, *flagLang)
 	case *flagImage:
 		w = captcha.NewImage(d, *flagImgW, *flagImgH)
 	}
