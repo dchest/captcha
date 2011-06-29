@@ -20,3 +20,5 @@ How to create sounds for other languages
   name.
 
 * make && ./generate
+
+If all goes well, fork this repository, commit your changes, and send me a pull request.
