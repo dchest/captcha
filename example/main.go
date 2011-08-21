@@ -14,7 +14,7 @@ import (
 	"template"
 )
 
-var formTemplate = template.MustParse(formTemplateSrc, nil)
+var formTemplate = template.Must(template.New("example").Parse(formTemplateSrc))
 
 func showFormHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -23,10 +23,8 @@ func showFormHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	d := struct {
 		CaptchaId  string
-		JavaScript string
 	}{
 		captcha.New(),
-		formJavaScript,
 	}
 	if err := formTemplate.Execute(w, &d); err != nil {
 		http.Error(w, err.String(), http.StatusInternalServerError)
@@ -34,6 +32,7 @@ func showFormHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func processFormHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if !captcha.VerifyString(r.FormValue("captchaId"), r.FormValue("captchaSolution")) {
 		io.WriteString(w, "Wrong captcha solution! No robots allowed!\n")
 	} else {
@@ -52,7 +51,10 @@ func main() {
 	}
 }
 
-const formJavaScript = `
+const formTemplateSrc = `<!doctype html>
+<head><title>Captcha Example</title></head>
+<body>
+<script>
 function setSrcQuery(e, q) {
 	var src  = e.src;
 	var p = src.indexOf('?');
@@ -84,13 +86,6 @@ function reload() {
 	setSrcQuery(document.getElementById('audio'), (new Date()).getTime());
 	return false;
 }
-`
-
-const formTemplateSrc = `<!doctype html>
-<head><title>Captcha Example</title></head>
-<body>
-<script>
-{JavaScript}
 </script>
 <select id="lang" onchange="changeLang()">
 	<option value="en">English</option>
@@ -98,13 +93,13 @@ const formTemplateSrc = `<!doctype html>
 </select>
 <form action="/process" method=post>
 <p>Type the numbers you see in the picture below:</p>
-<p><img id=image src="/captcha/{CaptchaId}.png" alt="Captcha image"></p>
+<p><img id=image src="/captcha/{{.CaptchaId}}.png" alt="Captcha image"></p>
 <a href="#" onclick="reload()">Reload</a> | <a href="#" onclick="playAudio()">Play Audio</a>
-<audio id=audio controls style="display:none" src="/captcha/{CaptchaId}.wav" preload=none>
+<audio id=audio controls style="display:none" src="/captcha/{{.CaptchaId}}.wav" preload=none>
   You browser doesn't support audio.
-  <a href="/captcha/download/{CaptchaId}.wav">Download file</a> to play it in the external player.
+  <a href="/captcha/download/{{.CaptchaId}}.wav">Download file</a> to play it in the external player.
 </audio>
-<input type=hidden name=captchaId value="{CaptchaId}"><br>
+<input type=hidden name=captchaId value="{{.CaptchaId}}"><br>
 <input name=captchaSolution>
 <input type=submit value=Submit>
 </form>
