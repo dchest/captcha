@@ -6,6 +6,7 @@ package captcha
 
 import (
 	"image"
+	"image/color"
 	"image/png"
 	"io"
 	"math"
@@ -30,16 +31,12 @@ type Image struct {
 	dotSize   int
 }
 
-func randomPalette() image.PalettedColorModel {
-	p := make([]image.Color, circleCount+1)
+func randomPalette() color.Palette {
+	p := make([]color.Color, circleCount+1)
 	// Transparent color.
-	// TODO(dchest). Currently it's white, not transparent, because PNG
-	// encoder doesn't support paletted images with alpha channel.
-	// Submitted CL: http://codereview.appspot.com/4432078 Change alpha to
-	// 0x00 once it's accepted.
-	p[0] = image.RGBAColor{0xFF, 0xFF, 0xFF, 0xFF}
+	p[0] = color.RGBA{0xFF, 0xFF, 0xFF, 0x00}
 	// Primary color.
-	prim := image.RGBAColor{
+	prim := color.RGBA{
 		uint8(rand.Intn(129)),
 		uint8(rand.Intn(129)),
 		uint8(rand.Intn(129)),
@@ -57,7 +54,7 @@ func randomPalette() image.PalettedColorModel {
 // given digits, where each digit must be in range 0-9.
 func NewImage(digits []byte, width, height int) *Image {
 	m := new(Image)
-	m.Paletted = image.NewPaletted(width, height, randomPalette())
+	m.Paletted = image.NewPaletted(image.Rect(0, 0, width, height), randomPalette())
 	m.calculateSizes(width, height, len(digits))
 	// Randomly position captcha inside the image.
 	maxx := width - (m.numWidth+m.dotSize)*len(digits) - m.dotSize
@@ -209,7 +206,7 @@ func (m *Image) distort(amplude float64, period float64) {
 	h := m.Bounds().Max.Y
 
 	oldm := m.Paletted
-	newm := image.NewPaletted(w, h, oldm.Palette)
+	newm := image.NewPaletted(image.Rect(0, 0, w, h), oldm.Palette)
 
 	dx := 2.0 * math.Pi / period
 	for x := 0; x < w; x++ {
@@ -222,14 +219,14 @@ func (m *Image) distort(amplude float64, period float64) {
 	m.Paletted = newm
 }
 
-func randomBrightness(c image.RGBAColor, max uint8) image.RGBAColor {
+func randomBrightness(c color.RGBA, max uint8) color.RGBA {
 	minc := min3(c.R, c.G, c.B)
 	maxc := max3(c.R, c.G, c.B)
 	if maxc > max {
 		return c
 	}
 	n := rand.Intn(int(max-maxc)) - int(minc)
-	return image.RGBAColor{
+	return color.RGBA{
 		uint8(int(c.R) + n),
 		uint8(int(c.G) + n),
 		uint8(int(c.B) + n),
