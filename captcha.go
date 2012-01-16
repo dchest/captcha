@@ -49,6 +49,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"time"
 )
 
 const (
@@ -58,7 +59,7 @@ const (
 	// by default store.
 	CollectNum = 100
 	// Expiration time of captchas used by default store.
-	Expiration = 10 * 60 // 10 minutes
+	Expiration = 10 * time.Minute
 )
 
 var (
