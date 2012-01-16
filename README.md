@@ -65,7 +65,7 @@ const (
     // by default store.
     CollectNum = 100
     // Expiration time of captchas used by default store.
-    Expiration = 10 * 60 // 10 minutes
+    Expiration = 10 * time.Minutes
 )
 ```
 
@@ -83,7 +83,7 @@ Variables
 
 ``` go
 var (
-    ErrNotFound = os.NewError("captcha: id not found")
+    ErrNotFound = errors.New("captcha: id not found")
 )
 ```
 
@@ -179,7 +179,7 @@ digits and listed above, will cause the function to return false.
 
 ### func WriteAudio
 
-	func WriteAudio(w io.Writer, id string, lang string) os.Error
+	func WriteAudio(w io.Writer, id string, lang string) error
 	
 WriteAudio writes WAV-encoded audio representation of the captcha with the
 given id and the given language. If there are no sounds for the given
@@ -187,7 +187,7 @@ language, English is used.
 
 ### func WriteImage
 
-	func WriteImage(w io.Writer, id string, width, height int) os.Error
+	func WriteImage(w io.Writer, id string, width, height int) error
 	
 WriteImage writes PNG-encoded image representation of the captcha with the
 given id. The image will have the given width and height.
@@ -219,7 +219,7 @@ EncodedLen returns the length of WAV-encoded audio captcha.
 
 ### func (*Audio) WriteTo
 
-	func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error)
+	func (a *Audio) WriteTo(w io.Writer) (n int64, err error)
 	
 WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 returns the number of bytes written and an error if any.
@@ -241,7 +241,7 @@ given digits, where each digit must be in range 0-9.
 
 ### func (*Image) WriteTo
 
-	func (m *Image) WriteTo(w io.Writer) (int64, os.Error)
+	func (m *Image) WriteTo(w io.Writer) (int64, error)
 	
 WriteTo writes captcha image in PNG format into the given writer.
 
@@ -266,7 +266,7 @@ method after the certain amount of captchas has been stored.)
 
 ### func NewMemoryStore
 
-	func NewMemoryStore(collectNum int, expiration int64) Store
+	func NewMemoryStore(collectNum int, expiration time.Duration) Store
 	
 NewMemoryStore returns a new standard memory store for captchas with the
 given collection threshold and expiration time in seconds. The returned
