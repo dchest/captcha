@@ -30,7 +30,7 @@ type Store interface {
 // memoryStore for indexing generated captchas by timestamp to enable garbage
 // collection of expired captchas.
 type idByTimeValue struct {
-	timestamp int64
+	timestamp time.Time
 	id        string
 }
 
@@ -44,13 +44,13 @@ type memoryStore struct {
 	// Number of saved items that triggers collection.
 	collectNum int
 	// Expiration time of captchas.
-	expiration int64
+	expiration time.Duration
 }
 
 // NewMemoryStore returns a new standard memory store for captchas with the
-// given collection threshold and expiration time in seconds. The returned
+// given collection threshold and expiration time (duration). The returned
 // store must be registered with SetCustomStore to replace the default one.
-func NewMemoryStore(collectNum int, expiration int64) Store {
+func NewMemoryStore(collectNum int, expiration time.Duration) Store {
 	s := new(memoryStore)
 	s.digitsById = make(map[string][]byte)
 	s.idByTime = list.New()
@@ -62,7 +62,7 @@ func NewMemoryStore(collectNum int, expiration int64) Store {
 func (s *memoryStore) Set(id string, digits []byte) {
 	s.mu.Lock()
 	s.digitsById[id] = digits
-	s.idByTime.PushBack(idByTimeValue{time.Seconds(), id})
+	s.idByTime.PushBack(idByTimeValue{time.Now(), id})
 	s.numStored++
 	if s.numStored <= s.collectNum {
 		s.mu.Unlock()
@@ -86,7 +86,7 @@ func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
 		return
 	}
 	if clear {
-		s.digitsById[id] = nil, false
+		delete(s.digitsById, id)
 		// XXX(dchest) Index (s.idByTime) will be cleaned when
 		// collecting expired captchas.  Can't clean it here, because
 		// we don't store reference to expValue in the map.
@@ -96,7 +96,7 @@ func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
 }
 
 func (s *memoryStore) collect() {
-	now := time.Seconds()
+	now := time.Now()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.numStored = 0
@@ -105,8 +105,8 @@ func (s *memoryStore) collect() {
 		if !ok {
 			return
 		}
-		if ev.timestamp+s.expiration < now {
-			s.digitsById[ev.id] = nil, false
+		if ev.timestamp.Add(s.expiration).Before(now) {
+			delete(s.digitsById, ev.id)
 			next := e.Next()
 			s.idByTime.Remove(e)
 			e = next

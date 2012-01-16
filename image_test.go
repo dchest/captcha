@@ -4,16 +4,13 @@
 
 package captcha
 
-import (
-	"os"
-	"testing"
-)
+import "testing"
 
 type byteCounter struct {
 	n int64
 }
 
-func (bc *byteCounter) Write(b []byte) (int, os.Error) {
+func (bc *byteCounter) Write(b []byte) (int, error) {
 	bc.n += int64(len(b))
 	return len(b), nil
 }

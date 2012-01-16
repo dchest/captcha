@@ -10,8 +10,7 @@ import (
 	"image/png"
 	"io"
 	"math"
-	"os"
-	"rand"
+	"math/rand"
 )
 
 const (
@@ -86,7 +85,7 @@ func NewImage(digits []byte, width, height int) *Image {
 // doesn't report this.
 
 // WriteTo writes captcha image in PNG format into the given writer.
-func (m *Image) WriteTo(w io.Writer) (int64, os.Error) {
+func (m *Image) WriteTo(w io.Writer) (int64, error) {
 	return 0, png.Encode(w, m.Paletted)
 }
 

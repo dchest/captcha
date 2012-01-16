@@ -8,10 +8,10 @@ package main
 import (
 	"fmt"
 	"github.com/dchest/captcha"
-	"http"
 	"io"
 	"log"
-	"template"
+	"net/http"
+	"text/template"
 )
 
 var formTemplate = template.Must(template.New("example").Parse(formTemplateSrc))
@@ -22,12 +22,12 @@ func showFormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := struct {
-		CaptchaId  string
+		CaptchaId string
 	}{
 		captcha.New(),
 	}
 	if err := formTemplate.Execute(w, &d); err != nil {
-		http.Error(w, err.String(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 

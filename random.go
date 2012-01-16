@@ -7,7 +7,7 @@ package captcha
 import (
 	crand "crypto/rand"
 	"io"
-	"rand"
+	"math/rand"
 	"time"
 )
 
@@ -18,7 +18,7 @@ const idLen = 20
 var idChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
 
 func init() {
-	rand.Seed(time.Nanoseconds())
+	rand.Seed(time.Now().UnixNano())
 }
 
 // RandomDigits returns a byte slice of the given length containing
@@ -32,7 +32,7 @@ func RandomDigits(length int) []byte {
 func randomBytes(length int) (b []byte) {
 	b = make([]byte, length)
 	if _, err := io.ReadFull(crand.Reader, b); err != nil {
-		panic("captcha: error reading random source: " + err.String())
+		panic("captcha: error reading random source: " + err.Error())
 	}
 	return
 }

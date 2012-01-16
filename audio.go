@@ -7,10 +7,10 @@ package captcha
 import (
 	"bytes"
 	"encoding/binary"
-	"math"
-	"os"
-	"rand"
 	"io"
+
+	"math"
+	"math/rand"
 )
 
 const sampleRate = 8000 // Hz
@@ -24,7 +24,7 @@ func init() {
 }
 
 type Audio struct {
-	body *bytes.Buffer
+	body        *bytes.Buffer
 	digitSounds [][]byte
 }
 
@@ -79,7 +79,7 @@ func NewAudio(digits []byte, lang string) *Audio {
 
 // WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 // returns the number of bytes written and an error if any.
-func (a *Audio) WriteTo(w io.Writer) (n int64, err os.Error) {
+func (a *Audio) WriteTo(w io.Writer) (n int64, err error) {
 	// Calculate padded length of PCM chunk data.
 	bodyLen := uint32(a.body.Len())
 	paddedBodyLen := bodyLen

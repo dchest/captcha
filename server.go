@@ -5,8 +5,7 @@
 package captcha
 
 import (
-	"http"
-	"os"
+	"net/http"
 	"path"
 	"strconv"
 	"strings"
@@ -39,11 +38,11 @@ type captchaHandler struct {
 // By default, the Server serves audio in English language. To serve audio
 // captcha in one of the other supported languages, append "lang" value, for
 // example, "?lang=ru".
-func Server(imgWidth, imgHeight int) http.Handler { 
+func Server(imgWidth, imgHeight int) http.Handler {
 	return &captchaHandler{imgWidth, imgHeight}
 }
 
-func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, lang string, download bool) os.Error {
+func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, lang string, download bool) error {
 	if download {
 		w.Header().Set("Content-Type", "application/octet-stream")
 	}
