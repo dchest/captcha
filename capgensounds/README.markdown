@@ -20,6 +20,6 @@ How to create sounds for other languages
 * Open main.go and edit "var langs" on line 21 to include the new directory
   name.
 
-* make && ./generate
+* go install && $GOROOT/bin/capgensounds
 
 If all goes well, fork this repository, commit your changes, and send me a pull request.
