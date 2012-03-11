@@ -27,5 +27,5 @@ capgen/*.wav
 
 # Programs
 capgen/capgen
-generate/generate
-example/example
+cangensounds/cangensounds
+capexample/capexample
