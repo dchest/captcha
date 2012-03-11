@@ -43,7 +43,7 @@ verify that the given solution is the right one for the given captcha id.
 Server provides an http.Handler which can serve image and audio
 representations of captchas automatically from the URL. It can also be used
 to reload captchas.  Refer to Server function documentation for details, or
-take a look at the example in "example" subdirectory.
+take a look at the example in "capexample" subdirectory.
 
 
 Examples
@@ -211,6 +211,8 @@ NewImage returns a new audio captcha with the given digits, where each digit
 must be in range 0-9. Digits are pronounced in the given language. If there
 are no sounds for the given language, English is used.
 
+Possible values for lang are "en", "ru", "zh".
+
 ### func (*Audio) EncodedLen
 
 	func (a *Audio) EncodedLen() int
@@ -279,11 +281,3 @@ Bugs
 * While Image conforms to io.WriterTo interface, its WriteTo
 method returns 0 instead of the actual bytes written because png.Encode
 doesn't report this.
-
-
-Subdirectories
---------------
-
-* capgen
-* example
-* generate

@@ -42,7 +42,7 @@
 // Server provides an http.Handler which can serve image and audio
 // representations of captchas automatically from the URL. It can also be used
 // to reload captchas.  Refer to Server function documentation for details, or
-// take a look at the example in "example" subdirectory.
+// take a look at the example in "capexample" subdirectory.
 package captcha
 
 import (
