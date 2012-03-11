@@ -31,6 +31,8 @@ type Audio struct {
 // NewImage returns a new audio captcha with the given digits, where each digit
 // must be in range 0-9. Digits are pronounced in the given language. If there
 // are no sounds for the given language, English is used.
+//
+// Possible values for lang are "en", "ru", "zh".
 func NewAudio(digits []byte, lang string) *Audio {
 	a := new(Audio)
 	if sounds, ok := digitSounds[lang]; ok {

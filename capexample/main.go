@@ -90,6 +90,7 @@ function reload() {
 <select id="lang" onchange="changeLang()">
 	<option value="en">English</option>
 	<option value="ru">Russian</option>
+	<option value="zh">Chinese</option>
 </select>
 <form action="/process" method=post>
 <p>Type the numbers you see in the picture below:</p>
