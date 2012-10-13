@@ -36,7 +36,7 @@ type idByTimeValue struct {
 
 // memoryStore is an internal store for captcha ids and their values.
 type memoryStore struct {
-	mu         sync.RWMutex
+	sync.RWMutex
 	digitsById map[string][]byte
 	idByTime   *list.List
 	// Number of items stored since last collection.
@@ -60,26 +60,26 @@ func NewMemoryStore(collectNum int, expiration time.Duration) Store {
 }
 
 func (s *memoryStore) Set(id string, digits []byte) {
-	s.mu.Lock()
+	s.Lock()
 	s.digitsById[id] = digits
 	s.idByTime.PushBack(idByTimeValue{time.Now(), id})
 	s.numStored++
 	if s.numStored <= s.collectNum {
-		s.mu.Unlock()
+		s.Unlock()
 		return
 	}
-	s.mu.Unlock()
+	s.Unlock()
 	go s.collect()
 }
 
 func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
 	if !clear {
 		// When we don't need to clear captcha, acquire read lock.
-		s.mu.RLock()
-		defer s.mu.RUnlock()
+		s.RLock()
+		defer s.RUnlock()
 	} else {
-		s.mu.Lock()
-		defer s.mu.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
 	digits, ok := s.digitsById[id]
 	if !ok {
@@ -97,8 +97,8 @@ func (s *memoryStore) Get(id string, clear bool) (digits []byte) {
 
 func (s *memoryStore) collect() {
 	now := time.Now()
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.Lock()
+	defer s.Unlock()
 	s.numStored = 0
 	for e := s.idByTime.Front(); e != nil; {
 		ev, ok := e.Value.(idByTimeValue)
