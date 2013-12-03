@@ -273,11 +273,3 @@ method after the certain amount of captchas has been stored.)
 NewMemoryStore returns a new standard memory store for captchas with the
 given collection threshold and expiration time in seconds. The returned
 store must be registered with SetCustomStore to replace the default one.
-
-
-Bugs
-----
-
-* While Image conforms to io.WriterTo interface, its WriteTo
-method returns 0 instead of the actual bytes written because png.Encode
-doesn't report this.

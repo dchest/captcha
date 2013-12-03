@@ -5,6 +5,7 @@
 package captcha
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	"image/png"
@@ -80,13 +81,20 @@ func NewImage(digits []byte, width, height int) *Image {
 	return m
 }
 
-// BUG(dchest): While Image conforms to io.WriterTo interface, its WriteTo
-// method returns 0 instead of the actual bytes written because png.Encode
-// doesn't report this.
+// encodeToPNG encodes an image to PNG and returns
+// the result as a byte slice.
+func (m *Image) encodedPNG() []byte {
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, m.Paletted); err != nil {
+		panic(err.Error())
+	}
+	return buf.Bytes()
+}
 
 // WriteTo writes captcha image in PNG format into the given writer.
 func (m *Image) WriteTo(w io.Writer) (int64, error) {
-	return 0, png.Encode(w, m.Paletted)
+	n, err := w.Write(m.encodedPNG())
+	return int64(n), err
 }
 
 func (m *Image) calculateSizes(width, height, ncount int) {
