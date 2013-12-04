@@ -81,7 +81,7 @@ func NewImage(digits []byte, width, height int) *Image {
 	return m
 }
 
-// encodeToPNG encodes an image to PNG and returns
+// encodedPNG encodes an image to PNG and returns
 // the result as a byte slice.
 func (m *Image) encodedPNG() []byte {
 	var buf bytes.Buffer
