@@ -11,7 +11,6 @@ import (
 	"image/png"
 	"io"
 	"math"
-	"math/rand"
 )
 
 const (
@@ -37,9 +36,9 @@ func randomPalette() color.Palette {
 	p[0] = color.RGBA{0xFF, 0xFF, 0xFF, 0x00}
 	// Primary color.
 	prim := color.RGBA{
-		uint8(rand.Intn(129)),
-		uint8(rand.Intn(129)),
-		uint8(rand.Intn(129)),
+		uint8(randIntn(129)),
+		uint8(randIntn(129)),
+		uint8(randIntn(129)),
 		0xFF,
 	}
 	p[1] = prim
@@ -65,8 +64,8 @@ func NewImage(digits []byte, width, height int) *Image {
 	} else {
 		border = width / 5
 	}
-	x := rnd(border, maxx-border)
-	y := rnd(border, maxy-border)
+	x := randInt(border, maxx-border)
+	y := randInt(border, maxy-border)
 	// Draw digits.
 	for _, n := range digits {
 		m.drawDigit(font[n], x, y)
@@ -75,7 +74,7 @@ func NewImage(digits []byte, width, height int) *Image {
 	// Draw strike-through line.
 	m.strikeThrough()
 	// Apply wave distortion.
-	m.distort(rndf(5, 10), rndf(100, 200))
+	m.distort(randFloat(5, 10), randFloat(100, 200))
 	// Fill image with random circles.
 	m.fillWithCircles(circleCount, m.dotSize)
 	return m
@@ -168,34 +167,34 @@ func (m *Image) fillWithCircles(n, maxradius int) {
 	maxx := m.Bounds().Max.X
 	maxy := m.Bounds().Max.Y
 	for i := 0; i < n; i++ {
-		colorIdx := uint8(rnd(1, circleCount-1))
-		r := rnd(1, maxradius)
-		m.drawCircle(rnd(r, maxx-r), rnd(r, maxy-r), r, colorIdx)
+		colorIdx := uint8(randInt(1, circleCount-1))
+		r := randInt(1, maxradius)
+		m.drawCircle(randInt(r, maxx-r), randInt(r, maxy-r), r, colorIdx)
 	}
 }
 
 func (m *Image) strikeThrough() {
 	maxx := m.Bounds().Max.X
 	maxy := m.Bounds().Max.Y
-	y := rnd(maxy/3, maxy-maxy/3)
-	amplitude := rndf(5, 20)
-	period := rndf(80, 180)
+	y := randInt(maxy/3, maxy-maxy/3)
+	amplitude := randFloat(5, 20)
+	period := randFloat(80, 180)
 	dx := 2.0 * math.Pi / period
 	for x := 0; x < maxx; x++ {
 		xo := amplitude * math.Cos(float64(y)*dx)
 		yo := amplitude * math.Sin(float64(x)*dx)
 		for yn := 0; yn < m.dotSize; yn++ {
-			r := rnd(0, m.dotSize)
+			r := randInt(0, m.dotSize)
 			m.drawCircle(x+int(xo), y+int(yo)+(yn*m.dotSize), r/2, 1)
 		}
 	}
 }
 
 func (m *Image) drawDigit(digit []byte, x, y int) {
-	skf := rndf(-maxSkew, maxSkew)
+	skf := randFloat(-maxSkew, maxSkew)
 	xs := float64(x)
 	r := m.dotSize / 2
-	y += rnd(-r, r)
+	y += randInt(-r, r)
 	for yo := 0; yo < fontHeight; yo++ {
 		for xo := 0; xo < fontWidth; xo++ {
 			if digit[yo*fontWidth+xo] != blackChar {
@@ -232,7 +231,7 @@ func randomBrightness(c color.RGBA, max uint8) color.RGBA {
 	if maxc > max {
 		return c
 	}
-	n := rand.Intn(int(max-maxc)) - int(minc)
+	n := randIntn(int(max-maxc)) - int(minc)
 	return color.RGBA{
 		uint8(int(c.R) + n),
 		uint8(int(c.G) + n),

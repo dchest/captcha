@@ -5,10 +5,8 @@
 package captcha
 
 import (
-	crand "crypto/rand"
+	"crypto/rand"
 	"io"
-	"math/rand"
-	"time"
 )
 
 // idLen is a length of captcha id string.
@@ -16,10 +14,6 @@ const idLen = 20
 
 // idChars are characters allowed in captcha id.
 var idChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 // RandomDigits returns a byte slice of the given length containing
 // pseudorandom numbers in range 0-9. The slice can be used as a captcha
@@ -31,7 +25,7 @@ func RandomDigits(length int) []byte {
 // randomBytes returns a byte slice of the given length read from CSPRNG.
 func randomBytes(length int) (b []byte) {
 	b = make([]byte, length)
-	if _, err := io.ReadFull(crand.Reader, b); err != nil {
+	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		panic("captcha: error reading random source: " + err.Error())
 	}
 	return
@@ -69,12 +63,19 @@ func randomId() string {
 	return string(b)
 }
 
-// rnd returns a non-crypto pseudorandom int in range [from, to].
-func rnd(from, to int) int {
-	return rand.Intn(to+1-from) + from
+var prng = &siprng{}
+
+// randIntn returns a pseudorandom non-negative int in range [0, n).
+func randIntn(n int) int {
+	return prng.Intn(n)
 }
 
-// rndf returns a non-crypto pseudorandom float64 in range [from, to].
-func rndf(from, to float64) float64 {
-	return (to-from)*rand.Float64() + from
+// randInt returns a pseudorandom int in range [from, to].
+func randInt(from, to int) int {
+	return prng.Intn(to+1-from) + from
+}
+
+// randFloat returns a pseudorandom float64 in range [from, to].
+func randFloat(from, to float64) float64 {
+	return (to-from)*prng.Float64() + from
 }

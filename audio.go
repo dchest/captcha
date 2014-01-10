@@ -8,9 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-
 	"math"
-	"math/rand"
 )
 
 const sampleRate = 8000 // Hz
@@ -51,7 +49,7 @@ func NewAudio(digits []byte, lang string) *Audio {
 	intervals := make([]int, len(digits)+1)
 	intdur := 0
 	for i := range intervals {
-		dur := rnd(sampleRate, sampleRate*3) // 1 to 3 seconds
+		dur := randInt(sampleRate, sampleRate*3) // 1 to 3 seconds
 		intdur += dur
 		intervals[i] = dur
 	}
@@ -125,10 +123,10 @@ func (a *Audio) EncodedLen() int {
 func (a *Audio) makeBackgroundSound(length int) []byte {
 	b := makeWhiteNoise(length, 4)
 	for i := 0; i < length/(sampleRate/10); i++ {
-		snd := reversedSound(a.digitSounds[rand.Intn(10)])
-		snd = changeSpeed(snd, rndf(0.8, 1.4))
-		place := rand.Intn(len(b) - len(snd))
-		setSoundLevel(snd, rndf(0.2, 0.5))
+		snd := reversedSound(a.digitSounds[randIntn(10)])
+		snd = changeSpeed(snd, randFloat(0.8, 1.4))
+		place := randIntn(len(b) - len(snd))
+		setSoundLevel(snd, randFloat(0.2, 0.5))
 		mixSound(b[place:], snd)
 	}
 	return b
@@ -136,7 +134,7 @@ func (a *Audio) makeBackgroundSound(length int) []byte {
 
 func (a *Audio) randomizedDigitSound(n byte) []byte {
 	s := randomSpeed(a.digitSounds[n])
-	setSoundLevel(s, rndf(0.75, 1.2))
+	setSoundLevel(s, randFloat(0.75, 1.2))
 	return s
 }
 
@@ -198,7 +196,7 @@ func changeSpeed(a []byte, speed float64) []byte {
 }
 
 func randomSpeed(a []byte) []byte {
-	pitch := rndf(0.9, 1.2)
+	pitch := randFloat(0.9, 1.2)
 	return changeSpeed(a, pitch)
 }
 
