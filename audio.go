@@ -1,4 +1,4 @@
-// Copyright 2011 Dmitry Chestnykh. All rights reserved.
+// Copyright 2011-2014 Dmitry Chestnykh. All rights reserved.
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
@@ -13,9 +13,7 @@ import (
 
 const sampleRate = 8000 // Hz
 
-var (
-	endingBeepSound []byte
-)
+var endingBeepSound []byte
 
 func init() {
 	endingBeepSound = changeSpeed(beepSound, 1.4)
@@ -24,6 +22,7 @@ func init() {
 type Audio struct {
 	body        *bytes.Buffer
 	digitSounds [][]byte
+	rng         siprng
 }
 
 // NewAudio returns a new audio captcha with the given digits, where each digit
@@ -31,8 +30,12 @@ type Audio struct {
 // are no sounds for the given language, English is used.
 //
 // Possible values for lang are "en", "ru", "zh".
-func NewAudio(digits []byte, lang string) *Audio {
+func NewAudio(id string, digits []byte, lang string) *Audio {
 	a := new(Audio)
+
+	// Initialize PRNG.
+	a.rng.Seed(deriveSeed(audioSeedPurpose, id, digits))
+
 	if sounds, ok := digitSounds[lang]; ok {
 		a.digitSounds = sounds
 	} else {
@@ -49,7 +52,7 @@ func NewAudio(digits []byte, lang string) *Audio {
 	intervals := make([]int, len(digits)+1)
 	intdur := 0
 	for i := range intervals {
-		dur := randInt(sampleRate, sampleRate*3) // 1 to 3 seconds
+		dur := a.rng.Int(sampleRate, sampleRate*3) // 1 to 3 seconds
 		intdur += dur
 		intervals[i] = dur
 	}
@@ -121,20 +124,20 @@ func (a *Audio) EncodedLen() int {
 }
 
 func (a *Audio) makeBackgroundSound(length int) []byte {
-	b := makeWhiteNoise(length, 4)
+	b := a.makeWhiteNoise(length, 4)
 	for i := 0; i < length/(sampleRate/10); i++ {
-		snd := reversedSound(a.digitSounds[randIntn(10)])
-		snd = changeSpeed(snd, randFloat(0.8, 1.4))
-		place := randIntn(len(b) - len(snd))
-		setSoundLevel(snd, randFloat(0.2, 0.5))
+		snd := reversedSound(a.digitSounds[a.rng.Intn(10)])
+		snd = changeSpeed(snd, a.rng.Float(0.8, 1.4))
+		place := a.rng.Intn(len(b) - len(snd))
+		setSoundLevel(snd, a.rng.Float(0.2, 0.5))
 		mixSound(b[place:], snd)
 	}
 	return b
 }
 
 func (a *Audio) randomizedDigitSound(n byte) []byte {
-	s := randomSpeed(a.digitSounds[n])
-	setSoundLevel(s, randFloat(0.75, 1.2))
+	s := a.randomSpeed(a.digitSounds[n])
+	setSoundLevel(s, a.rng.Float(0.75, 1.2))
 	return s
 }
 
@@ -146,6 +149,22 @@ func (a *Audio) longestDigitSndLen() int {
 		}
 	}
 	return n
+}
+
+func (a *Audio) randomSpeed(b []byte) []byte {
+	pitch := a.rng.Float(0.9, 1.2)
+	return changeSpeed(b, pitch)
+}
+
+func (a *Audio) makeWhiteNoise(length int, level uint8) []byte {
+	noise := a.rng.Bytes(length)
+	adj := 128 - level/2
+	for i, v := range noise {
+		v %= level
+		v += adj
+		noise[i] = v
+	}
+	return noise
 }
 
 // mixSound mixes src into dst. Dst must have length equal to or greater than
@@ -195,28 +214,12 @@ func changeSpeed(a []byte, speed float64) []byte {
 	return b
 }
 
-func randomSpeed(a []byte) []byte {
-	pitch := randFloat(0.9, 1.2)
-	return changeSpeed(a, pitch)
-}
-
 func makeSilence(length int) []byte {
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = 128
 	}
 	return b
-}
-
-func makeWhiteNoise(length int, level uint8) []byte {
-	noise := randomBytes(length)
-	adj := 128 - level/2
-	for i, v := range noise {
-		v %= level
-		v += adj
-		noise[i] = v
-	}
-	return noise
 }
 
 func reversedSound(a []byte) []byte {

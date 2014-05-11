@@ -1,4 +1,4 @@
-// Copyright 2011 Dmitry Chestnykh. All rights reserved.
+// Copyright 2011-2014 Dmitry Chestnykh. All rights reserved.
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
@@ -28,32 +28,18 @@ type Image struct {
 	numWidth  int
 	numHeight int
 	dotSize   int
-}
-
-func randomPalette() color.Palette {
-	p := make([]color.Color, circleCount+1)
-	// Transparent color.
-	p[0] = color.RGBA{0xFF, 0xFF, 0xFF, 0x00}
-	// Primary color.
-	prim := color.RGBA{
-		uint8(randIntn(129)),
-		uint8(randIntn(129)),
-		uint8(randIntn(129)),
-		0xFF,
-	}
-	p[1] = prim
-	// Circle colors.
-	for i := 2; i <= circleCount; i++ {
-		p[i] = randomBrightness(prim, 255)
-	}
-	return p
+	rng       siprng
 }
 
 // NewImage returns a new captcha image of the given width and height with the
 // given digits, where each digit must be in range 0-9.
-func NewImage(digits []byte, width, height int) *Image {
+func NewImage(id string, digits []byte, width, height int) *Image {
 	m := new(Image)
-	m.Paletted = image.NewPaletted(image.Rect(0, 0, width, height), randomPalette())
+
+	// Initialize PRNG.
+	m.rng.Seed(deriveSeed(imageSeedPurpose, id, digits))
+
+	m.Paletted = image.NewPaletted(image.Rect(0, 0, width, height), m.getRandomPalette())
 	m.calculateSizes(width, height, len(digits))
 	// Randomly position captcha inside the image.
 	maxx := width - (m.numWidth+m.dotSize)*len(digits) - m.dotSize
@@ -64,8 +50,8 @@ func NewImage(digits []byte, width, height int) *Image {
 	} else {
 		border = width / 5
 	}
-	x := randInt(border, maxx-border)
-	y := randInt(border, maxy-border)
+	x := m.rng.Int(border, maxx-border)
+	y := m.rng.Int(border, maxy-border)
 	// Draw digits.
 	for _, n := range digits {
 		m.drawDigit(font[n], x, y)
@@ -74,10 +60,29 @@ func NewImage(digits []byte, width, height int) *Image {
 	// Draw strike-through line.
 	m.strikeThrough()
 	// Apply wave distortion.
-	m.distort(randFloat(5, 10), randFloat(100, 200))
+	m.distort(m.rng.Float(5, 10), m.rng.Float(100, 200))
 	// Fill image with random circles.
 	m.fillWithCircles(circleCount, m.dotSize)
 	return m
+}
+
+func (m *Image) getRandomPalette() color.Palette {
+	p := make([]color.Color, circleCount+1)
+	// Transparent color.
+	p[0] = color.RGBA{0xFF, 0xFF, 0xFF, 0x00}
+	// Primary color.
+	prim := color.RGBA{
+		uint8(m.rng.Intn(129)),
+		uint8(m.rng.Intn(129)),
+		uint8(m.rng.Intn(129)),
+		0xFF,
+	}
+	p[1] = prim
+	// Circle colors.
+	for i := 2; i <= circleCount; i++ {
+		p[i] = m.randomBrightness(prim, 255)
+	}
+	return p
 }
 
 // encodedPNG encodes an image to PNG and returns
@@ -167,34 +172,34 @@ func (m *Image) fillWithCircles(n, maxradius int) {
 	maxx := m.Bounds().Max.X
 	maxy := m.Bounds().Max.Y
 	for i := 0; i < n; i++ {
-		colorIdx := uint8(randInt(1, circleCount-1))
-		r := randInt(1, maxradius)
-		m.drawCircle(randInt(r, maxx-r), randInt(r, maxy-r), r, colorIdx)
+		colorIdx := uint8(m.rng.Int(1, circleCount-1))
+		r := m.rng.Int(1, maxradius)
+		m.drawCircle(m.rng.Int(r, maxx-r), m.rng.Int(r, maxy-r), r, colorIdx)
 	}
 }
 
 func (m *Image) strikeThrough() {
 	maxx := m.Bounds().Max.X
 	maxy := m.Bounds().Max.Y
-	y := randInt(maxy/3, maxy-maxy/3)
-	amplitude := randFloat(5, 20)
-	period := randFloat(80, 180)
+	y := m.rng.Int(maxy/3, maxy-maxy/3)
+	amplitude := m.rng.Float(5, 20)
+	period := m.rng.Float(80, 180)
 	dx := 2.0 * math.Pi / period
 	for x := 0; x < maxx; x++ {
 		xo := amplitude * math.Cos(float64(y)*dx)
 		yo := amplitude * math.Sin(float64(x)*dx)
 		for yn := 0; yn < m.dotSize; yn++ {
-			r := randInt(0, m.dotSize)
+			r := m.rng.Int(0, m.dotSize)
 			m.drawCircle(x+int(xo), y+int(yo)+(yn*m.dotSize), r/2, 1)
 		}
 	}
 }
 
 func (m *Image) drawDigit(digit []byte, x, y int) {
-	skf := randFloat(-maxSkew, maxSkew)
+	skf := m.rng.Float(-maxSkew, maxSkew)
 	xs := float64(x)
 	r := m.dotSize / 2
-	y += randInt(-r, r)
+	y += m.rng.Int(-r, r)
 	for yo := 0; yo < fontHeight; yo++ {
 		for xo := 0; xo < fontWidth; xo++ {
 			if digit[yo*fontWidth+xo] != blackChar {
@@ -225,13 +230,13 @@ func (m *Image) distort(amplude float64, period float64) {
 	m.Paletted = newm
 }
 
-func randomBrightness(c color.RGBA, max uint8) color.RGBA {
+func (m *Image) randomBrightness(c color.RGBA, max uint8) color.RGBA {
 	minc := min3(c.R, c.G, c.B)
 	maxc := max3(c.R, c.G, c.B)
 	if maxc > max {
 		return c
 	}
-	n := randIntn(int(max-maxc)) - int(minc)
+	n := m.rng.Intn(int(max-maxc)) - int(minc)
 	return color.RGBA{
 		uint8(int(c.R) + n),
 		uint8(int(c.G) + n),

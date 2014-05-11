@@ -31,13 +31,13 @@
 //
 // Captchas are created by calling New, which returns the captcha id.  Their
 // representations, though, are created on-the-fly by calling WriteImage or
-// WriteAudio functions. Created representations are not stored anywhere, so
+// WriteAudio functions. Created representations are not stored anywhere, but
 // subsequent calls to these functions with the same id will write the same
-// captcha solution, but with a different random representation. Reload
-// function will create a new different solution for the provided captcha,
-// allowing users to "reload" captcha if they can't solve the displayed one
-// without reloading the whole page.  Verify and VerifyString are used to
-// verify that the given solution is the right one for the given captcha id.
+// captcha solution. Reload function will create a new different solution for
+// the provided captcha, allowing users to "reload" captcha if they can't solve
+// the displayed one without reloading the whole page.  Verify and VerifyString
+// are used to verify that the given solution is the right one for the given
+// captcha id.
 //
 // Server provides an http.Handler which can serve image and audio
 // representations of captchas automatically from the URL. It can also be used
@@ -110,7 +110,7 @@ func WriteImage(w io.Writer, id string, width, height int) error {
 	if d == nil {
 		return ErrNotFound
 	}
-	_, err := NewImage(d, width, height).WriteTo(w)
+	_, err := NewImage(id, d, width, height).WriteTo(w)
 	return err
 }
 
@@ -122,7 +122,7 @@ func WriteAudio(w io.Writer, id string, lang string) error {
 	if d == nil {
 		return ErrNotFound
 	}
-	_, err := NewAudio(d, lang).WriteTo(w)
+	_, err := NewAudio(id, d, lang).WriteTo(w)
 	return err
 }
 

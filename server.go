@@ -60,7 +60,7 @@ func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, lang strin
 		if d == nil {
 			return ErrNotFound
 		}
-		a := NewAudio(d, lang)
+		a := NewAudio(id, d, lang)
 		if !download {
 			w.Header().Set("Content-Type", "audio/x-wav")
 		}

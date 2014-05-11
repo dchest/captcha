@@ -44,9 +44,9 @@ func main() {
 	d := captcha.RandomDigits(*flagLen)
 	switch {
 	case *flagAudio:
-		w = captcha.NewAudio(d, *flagLang)
+		w = captcha.NewAudio("", d, *flagLang)
 	case *flagImage:
-		w = captcha.NewImage(d, *flagImgW, *flagImgH)
+		w = captcha.NewImage("", d, *flagImgW, *flagImgH)
 	}
 	_, err = w.WriteTo(f)
 	if err != nil {

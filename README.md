@@ -32,13 +32,13 @@ registering the object with SetCustomStore.
 
 Captchas are created by calling New, which returns the captcha id.  Their
 representations, though, are created on-the-fly by calling WriteImage or
-WriteAudio functions. Created representations are not stored anywhere, so
+WriteAudio functions. Created representations are not stored anywhere, but
 subsequent calls to these functions with the same id will write the same
-captcha solution, but with a different random representation. Reload
-function will create a new different solution for the provided captcha,
-allowing users to "reload" captcha if they can't solve the displayed one
-without reloading the whole page.  Verify and VerifyString are used to
-verify that the given solution is the right one for the given captcha id.
+captcha solution. Reload function will create a new different solution for the
+provided captcha, allowing users to "reload" captcha if they can't solve the
+displayed one without reloading the whole page.  Verify and VerifyString are
+used to verify that the given solution is the right one for the given captcha
+id.
 
 Server provides an http.Handler which can serve image and audio
 representations of captchas automatically from the URL. It can also be used
@@ -205,7 +205,7 @@ type Audio struct {
 
 ### func NewAudio
 
-	func NewAudio(digits []byte, lang string) *Audio
+	func NewAudio(id string, digits []byte, lang string) *Audio
 	
 NewAudio returns a new audio captcha with the given digits, where each digit
 must be in range 0-9. Digits are pronounced in the given language. If there
@@ -236,7 +236,7 @@ type Image struct {
 
 ### func NewImage
 
-	func NewImage(digits []byte, width, height int) *Image
+	func NewImage(id string, digits []byte, width, height int) *Image
 	
 NewImage returns a new captcha image of the given width and height with the
 given digits, where each digit must be in range 0-9.
