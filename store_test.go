@@ -61,7 +61,6 @@ func TestCollect(t *testing.T) {
 	}
 }
 
-
 func BenchmarkSetCollect(b *testing.B) {
 	b.StopTimer()
 	d := RandomDigits(10)

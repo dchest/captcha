@@ -128,7 +128,7 @@ func WriteAudio(w io.Writer, id string, lang string) error {
 
 // Verify returns true if the given digits are the ones that were used to
 // create the given captcha id.
-// 
+//
 // The function deletes the captcha with the given id from the internal
 // storage, so that the same captcha can't be verified anymore.
 func Verify(id string, digits []byte) bool {

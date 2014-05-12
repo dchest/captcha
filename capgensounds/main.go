@@ -57,7 +57,7 @@ func writeSingle(pcm io.Writer, name string) {
 }
 
 func writeDigitSounds(pcm io.Writer, lang string) {
-	fmt.Fprintf(pcm, "\t\"%s\" : [][]byte{\n", lang)
+	fmt.Fprintf(pcm, "\t\"%s\": [][]byte{\n", lang)
 	for i := 0; i <= 9; i++ {
 		fmt.Fprintf(pcm, "\t\t{ // %d\n\t\t\t", i)
 		writeFileRep(pcm, filepath.Join(lang, fmt.Sprintf("%d.wav", i)), "\t\t\t")
