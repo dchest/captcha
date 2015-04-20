@@ -43,6 +43,9 @@ func Server(imgWidth, imgHeight int) http.Handler {
 }
 
 func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, lang string, download bool) error {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	if download {
 		w.Header().Set("Content-Type", "application/octet-stream")
 	}
