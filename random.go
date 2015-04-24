@@ -72,8 +72,14 @@ func randomBytes(length int) (b []byte) {
 // randomBytesMod returns a byte slice of the given length, where each byte is
 // a random number modulo mod.
 func randomBytesMod(length int, mod byte) (b []byte) {
+	if length == 0 {
+		return nil
+	}
+	if mod == 0 {
+		panic("captcha: bad mod argument for randomBytesMod")
+	}
+	maxrb := 255 - byte(256 % int(mod))
 	b = make([]byte, length)
-	maxrb := byte(256 - (256 % int(mod)))
 	i := 0
 	for {
 		r := randomBytes(length + (length / 4))
@@ -89,6 +95,7 @@ func randomBytesMod(length int, mod byte) (b []byte) {
 			}
 		}
 	}
+
 }
 
 // randomId returns a new random id string.
