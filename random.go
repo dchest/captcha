@@ -78,7 +78,7 @@ func randomBytesMod(length int, mod byte) (b []byte) {
 	if mod == 0 {
 		panic("captcha: bad mod argument for randomBytesMod")
 	}
-	maxrb := 255 - byte(256 % int(mod))
+	maxrb := 255 - byte(256%int(mod))
 	b = make([]byte, length)
 	i := 0
 	for {
