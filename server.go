@@ -5,10 +5,11 @@
 package captcha
 
 import (
+	"bytes"
 	"net/http"
 	"path"
-	"strconv"
 	"strings"
+	"time"
 )
 
 type captchaHandler struct {
@@ -42,36 +43,28 @@ func Server(imgWidth, imgHeight int) http.Handler {
 	return &captchaHandler{imgWidth, imgHeight}
 }
 
-func (h *captchaHandler) serve(w http.ResponseWriter, id, ext string, lang string, download bool) error {
+func (h *captchaHandler) serve(w http.ResponseWriter, r *http.Request, id, ext, lang string, download bool) error {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
+
+	var content bytes.Buffer
+	switch ext {
+	case ".png":
+		w.Header().Set("Content-Type", "image/png")
+		WriteImage(&content, id, h.imgWidth, h.imgHeight)
+	case ".wav":
+		w.Header().Set("Content-Type", "audio/x-wav")
+		WriteAudio(&content, id, lang)
+	default:
+		return ErrNotFound
+	}
+
 	if download {
 		w.Header().Set("Content-Type", "application/octet-stream")
 	}
-	switch ext {
-	case ".png":
-		if !download {
-			w.Header().Set("Content-Type", "image/png")
-		}
-		return WriteImage(w, id, h.imgWidth, h.imgHeight)
-	case ".wav":
-		//XXX(dchest) Workaround for Chrome: it wants content-length,
-		//or else will start playing NOT from the beginning.
-		//Filed issue: http://code.google.com/p/chromium/issues/detail?id=80565
-		d := globalStore.Get(id, false)
-		if d == nil {
-			return ErrNotFound
-		}
-		a := NewAudio(id, d, lang)
-		if !download {
-			w.Header().Set("Content-Type", "audio/x-wav")
-		}
-		w.Header().Set("Content-Length", strconv.Itoa(a.EncodedLen()))
-		_, err := a.WriteTo(w)
-		return err
-	}
-	return ErrNotFound
+	http.ServeContent(w, r, id+ext, time.Time{}, bytes.NewReader(content.Bytes()))
+	return nil
 }
 
 func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +80,7 @@ func (h *captchaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	lang := strings.ToLower(r.FormValue("lang"))
 	download := path.Base(dir) == "download"
-	if h.serve(w, id, ext, lang, download) == ErrNotFound {
+	if h.serve(w, r, id, ext, lang, download) == ErrNotFound {
 		http.NotFound(w, r)
 	}
 	// Ignore other errors.
