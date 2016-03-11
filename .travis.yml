@@ -1,0 +1,9 @@
+language: go
+go:
+  - 1.5.3
+install:
+  - go get
+  - go build 
+script:
+  - go test -cover
+sudo: required
