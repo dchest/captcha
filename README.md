@@ -1,4 +1,5 @@
 Package captcha
+[![Build Status](https://travis-ci.org/orvice/captcha.svg?branch=master)](https://travis-ci.org/orvice/captcha)
 =====================
 
 	import "github.com/dchest/captcha"
