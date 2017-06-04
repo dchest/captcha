@@ -189,7 +189,7 @@ func siphash(k0, k1, m uint64) uint64 {
 	return v0 ^ v1 ^ v2 ^ v3
 }
 
-// SetSeed sets a new secret seed for PRNG.
+// Seed sets a new secret seed for PRNG.
 func (p *siprng) Seed(k [16]byte) {
 	p.k0 = binary.LittleEndian.Uint64(k[0:8])
 	p.k1 = binary.LittleEndian.Uint64(k[8:16])
