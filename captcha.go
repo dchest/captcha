@@ -12,10 +12,10 @@
 // it in such a way that makes it hard for computers to solve it using OCR.
 //
 // An audio representation is a WAVE-encoded (8 kHz unsigned 8-bit) sound with
-// the spoken solution (currently in English, Russian, and Chinese). To make it
-// hard for computers to solve audio captcha, the voice that pronounces numbers
-// has random speed and pitch, and there is a randomly generated background
-// noise mixed into the sound.
+// the spoken solution (currently in English, Russian, Chinese, and Japanese).
+// To make it hard for computers to solve audio captcha, the voice that
+// pronounces numbers has random speed and pitch, and there is a randomly
+// generated background noise mixed into the sound.
 //
 // This package doesn't require external files or libraries to generate captcha
 // representations; it is self-contained.

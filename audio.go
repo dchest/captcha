@@ -29,7 +29,7 @@ type Audio struct {
 // must be in range 0-9. Digits are pronounced in the given language. If there
 // are no sounds for the given language, English is used.
 //
-// Possible values for lang are "en", "ru", "zh".
+// Possible values for lang are "en", "ja", "ru", "zh".
 func NewAudio(id string, digits []byte, lang string) *Audio {
 	a := new(Audio)
 

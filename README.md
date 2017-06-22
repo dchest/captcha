@@ -13,9 +13,9 @@ An image representation is a PNG-encoded image with the solution printed on
 it in such a way that makes it hard for computers to solve it using OCR.
 
 An audio representation is a WAVE-encoded (8 kHz unsigned 8-bit) sound with the
-spoken solution (currently in English, Russian, and Chinese). To make it hard
-for computers to solve audio captcha, the voice that pronounces numbers has
-random speed and pitch, and there is a randomly generated background noise
+spoken solution (currently in English, Russian, Chinese, and Japanese). To make
+it hard for computers to solve audio captcha, the voice that pronounces numbers
+has random speed and pitch, and there is a randomly generated background noise
 mixed into the sound.
 
 This package doesn't require external files or libraries to generate captcha
@@ -211,7 +211,7 @@ NewAudio returns a new audio captcha with the given digits, where each digit
 must be in range 0-9. Digits are pronounced in the given language. If there
 are no sounds for the given language, English is used.
 
-Possible values for lang are "en", "ru", "zh".
+Possible values for lang are "en", "ja", "ru", "zh".
 
 ### func (*Audio) EncodedLen
 

@@ -24,7 +24,7 @@ var (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "usage: captcha [flags] filename\n")
+	fmt.Fprintf(os.Stderr, "usage: capgen [flags] filename\n")
 	flag.PrintDefaults()
 }
 

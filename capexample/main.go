@@ -89,6 +89,7 @@ function reload() {
 </script>
 <select id="lang" onchange="changeLang()">
 	<option value="en">English</option>
+	<option value="ja">Japanese</option>
 	<option value="ru">Russian</option>
 	<option value="zh">Chinese</option>
 </select>
