@@ -74,6 +74,8 @@ const (
     // Standard width and height of a captcha image.
     StdWidth  = 240
     StdHeight = 80
+	// Maximum absolute skew factor of a single digit. If your captcha is difficult to identify, please turn it down.example 0.9 => 0.1
+	maxSkew = 0.9 
 )
 ```
 
