@@ -50,3 +50,11 @@ func TestRandomDigits(t *testing.T) {
 		t.Errorf("digits seem to be not random")
 	}
 }
+
+func TestGetBase64Image(t *testing.T) {
+	id := New()
+	code := GetBase64Image(id,120,80)
+	if len(code) == 0 {
+		t.Error("generated base64 code failed")
+	}
+}

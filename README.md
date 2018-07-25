@@ -192,6 +192,13 @@ language, English is used.
 WriteImage writes PNG-encoded image representation of the captcha with the
 given id. The image will have the given width and height.
 
+### func GetBase64Image
+
+	func GetBase64Image (id string, width, height int) string
+
+GetBase64Image returns a base64-encoding of captcha with the given id
+The image will have the given width and height.
+
 
 Types
 -----
