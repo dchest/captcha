@@ -50,6 +50,7 @@ import (
 	"errors"
 	"io"
 	"time"
+	"encoding/base64"
 )
 
 const (
@@ -124,6 +125,18 @@ func WriteAudio(w io.Writer, id string, lang string) error {
 	}
 	_, err := NewAudio(id, d, lang).WriteTo(w)
 	return err
+}
+
+// GetBase64Image returns a base64-encoding of captcha with the given id
+// The image will have the given width and height.
+func GetBase64Image (id string, width, height int) string {
+	d := globalStore.Get(id, false)
+	if d == nil {
+		return ""
+	}
+	pngCode := NewImage(id, d, width, height).encodedPNG()
+	base64Code := "data:image/png;base64," + base64.StdEncoding.EncodeToString(pngCode)
+	return base64Code
 }
 
 // Verify returns true if the given digits are the ones that were used to
