@@ -126,6 +126,16 @@ func WriteAudio(w io.Writer, id string, lang string) error {
 	return err
 }
 
+// WriteString writes string representation of the captcha with the given id.
+func WriteString(w io.Writer, id string) error {
+	d := globalStore.Get(id, false)
+	if d == nil {
+		return ErrNotFound
+	}
+	_, err := w.Write(d)
+	return err
+}
+
 // Verify returns true if the given digits are the ones that were used to
 // create the given captcha id.
 //
