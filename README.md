@@ -106,6 +106,13 @@ storage and returns its id.
 NewLen is just like New, but accepts length of a captcha solution as the
 argument.
 
+## func RealDigits
+
+    func RealDigits(id string) string
+
+RealDigits returns the actual digits that were used to create the given 
+captcha id.
+
 ### func RandomDigits
 
 	func RandomDigits(length int) (b []byte)

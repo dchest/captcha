@@ -49,6 +49,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -86,6 +88,21 @@ func NewLen(length int) (id string) {
 	id = randomId()
 	globalStore.Set(id, RandomDigits(length))
 	return
+}
+
+// RealDigits returns a string containing the actual numbers used to
+// create the given captcha id.
+func RealDigits(id string) string {
+	reald := globalStore.Get(id, false)
+	if reald == nil {
+		return ""
+	}
+
+	s := make([]string, len(reald))
+	for i := range reald {
+		s[i] = strconv.Itoa(int(reald[i]))
+	}
+	return strings.Join(s, "")
 }
 
 // Reload generates and remembers new digits for the given captcha id.  This
