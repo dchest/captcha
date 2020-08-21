@@ -125,13 +125,15 @@ func (a *Audio) EncodedLen() int {
 
 func (a *Audio) makeBackgroundSound(length int) []byte {
 	b := a.makeWhiteNoise(length, 4)
-	for i := 0; i < length/(sampleRate/10); i++ {
-		snd := reversedSound(a.digitSounds[a.rng.Intn(10)])
-		snd = changeSpeed(snd, a.rng.Float(0.8, 1.4))
-		place := a.rng.Intn(len(b) - len(snd))
-		setSoundLevel(snd, a.rng.Float(0.2, 0.5))
-		mixSound(b[place:], snd)
-	}
+	if enableAudioNoise {
+        for i := 0; i < length/(sampleRate/10); i++ {
+            snd := reversedSound(a.digitSounds[a.rng.Intn(10)])
+            snd = changeSpeed(snd, a.rng.Float(0.8, 1.4))
+            place := a.rng.Intn(len(b) - len(snd))
+            setSoundLevel(snd, a.rng.Float(0.2, 0.5))
+            mixSound(b[place:], snd)
+        }
+    }
 	return b
 }
 
