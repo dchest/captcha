@@ -1,6 +1,8 @@
 Package captcha
 =====================
 
+**:warning: Warning: this captcha can be broken by advanced OCR captcha breaking algorithms.**
+
 	import "github.com/dchest/captcha"
 
 Package captcha implements generation and verification of image and audio
