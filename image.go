@@ -68,8 +68,8 @@ func NewImage(id string, digits []byte, width, height int) *Image {
 
 func (m *Image) getRandomPalette() color.Palette {
 	p := make([]color.Color, circleCount+1)
-	// Transparent color.
-	p[0] = color.RGBA{0xFF, 0xFF, 0xFF, 0x00}
+	// White background color.
+	p[0] = color.RGBA{0xFF, 0xFF, 0xFF, 0xFF}
 	// Primary color.
 	prim := color.RGBA{
 		uint8(m.rng.Intn(129)),
