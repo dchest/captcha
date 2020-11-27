@@ -3,7 +3,9 @@ Package captcha
 
 **:warning: Warning: this captcha can be broken by advanced OCR captcha breaking algorithms.**
 
-	import "github.com/dchest/captcha"
+```go
+import "github.com/dchest/captcha"
+```
 
 Package captcha implements generation and verification of image and audio
 CAPTCHAs.
@@ -96,21 +98,27 @@ Functions
 
 ### func New
 
-	func New() string
+```go
+func New() string
+```
 	
 New creates a new captcha with the standard length, saves it in the internal
 storage and returns its id.
 
 ### func NewLen
 
-	func NewLen(length int) (id string)
+```go
+func NewLen(length int) (id string)
+```
 	
 NewLen is just like New, but accepts length of a captcha solution as the
 argument.
 
 ### func RandomDigits
 
-	func RandomDigits(length int) (b []byte)
+```go
+func RandomDigits(length int) (b []byte)
+```
 	
 RandomDigits returns a byte slice of the given length containing
 pseudorandom numbers in range 0-9. The slice can be used as a captcha
@@ -118,7 +126,9 @@ solution.
 
 ### func Reload
 
-	func Reload(id string) bool
+```go
+func Reload(id string) bool
+```
 	
 Reload generates and remembers new digits for the given captcha id.  This
 function returns false if there is no captcha with the given id.
@@ -129,7 +139,9 @@ will write the new one).
 
 ### func Server
 
-	func Server(imgWidth, imgHeight int) http.Handler
+```go
+func Server(imgWidth, imgHeight int) http.Handler
+```
 	
 Server returns a handler that serves HTTP requests with image or
 audio representations of captchas. Image dimensions are accepted as
@@ -156,14 +168,18 @@ example, "?lang=ru".
 
 ### func SetCustomStore
 
-	func SetCustomStore(s Store)
+```go
+func SetCustomStore(s Store)
+```
 	
 SetCustomStore sets custom storage for captchas, replacing the default
 memory store. This function must be called before generating any captchas.
 
 ### func Verify
 
-	func Verify(id string, digits []byte) bool
+```go
+func Verify(id string, digits []byte) bool
+```
 	
 Verify returns true if the given digits are the ones that were used to
 create the given captcha id.
@@ -173,7 +189,9 @@ storage, so that the same captcha can't be verified anymore.
 
 ### func VerifyString
 
-	func VerifyString(id string, digits string) bool
+```go
+func VerifyString(id string, digits string) bool
+```
 	
 VerifyString is like Verify, but accepts a string of digits.  It removes
 spaces and commas from the string, but any other characters, apart from
@@ -181,7 +199,9 @@ digits and listed above, will cause the function to return false.
 
 ### func WriteAudio
 
-	func WriteAudio(w io.Writer, id string, lang string) error
+```go
+func WriteAudio(w io.Writer, id string, lang string) error
+```
 	
 WriteAudio writes WAV-encoded audio representation of the captcha with the
 given id and the given language. If there are no sounds for the given
@@ -189,7 +209,9 @@ language, English is used.
 
 ### func WriteImage
 
-	func WriteImage(w io.Writer, id string, width, height int) error
+```go
+func WriteImage(w io.Writer, id string, width, height int) error
+```
 	
 WriteImage writes PNG-encoded image representation of the captcha with the
 given id. The image will have the given width and height.
@@ -207,7 +229,9 @@ type Audio struct {
 
 ### func NewAudio
 
-	func NewAudio(id string, digits []byte, lang string) *Audio
+```go
+func NewAudio(id string, digits []byte, lang string) *Audio
+```
 	
 NewAudio returns a new audio captcha with the given digits, where each digit
 must be in range 0-9. Digits are pronounced in the given language. If there
@@ -217,13 +241,17 @@ Possible values for lang are "en", "ja", "ru", "zh".
 
 ### func (*Audio) EncodedLen
 
-	func (a *Audio) EncodedLen() int
+```go
+func (a *Audio) EncodedLen() int
+```
 	
 EncodedLen returns the length of WAV-encoded audio captcha.
 
 ### func (*Audio) WriteTo
 
-	func (a *Audio) WriteTo(w io.Writer) (n int64, err error)
+```go
+func (a *Audio) WriteTo(w io.Writer) (n int64, err error)
+```
 	
 WriteTo writes captcha audio in WAVE format into the given io.Writer, and
 returns the number of bytes written and an error if any.
@@ -238,14 +266,18 @@ type Image struct {
 
 ### func NewImage
 
-	func NewImage(id string, digits []byte, width, height int) *Image
+```go
+func NewImage(id string, digits []byte, width, height int) *Image
+```
 	
 NewImage returns a new captcha image of the given width and height with the
 given digits, where each digit must be in range 0-9.
 
 ### func (*Image) WriteTo
 
-	func (m *Image) WriteTo(w io.Writer) (int64, error)
+```go
+func (m *Image) WriteTo(w io.Writer) (int64, error)
+```
 	
 WriteTo writes captcha image in PNG format into the given writer.
 
@@ -270,7 +302,9 @@ method after the certain amount of captchas has been stored.)
 
 ### func NewMemoryStore
 
-	func NewMemoryStore(collectNum int, expiration time.Duration) Store
+```go
+func NewMemoryStore(collectNum int, expiration time.Duration) Store
+```
 	
 NewMemoryStore returns a new standard memory store for captchas with the
 given collection threshold and expiration time in seconds. The returned
