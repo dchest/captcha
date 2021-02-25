@@ -5,8 +5,8 @@
 package captcha
 
 const (
-	fontWidth  = 11
-	fontHeight = 18
+	fontWidth  = 14
+	fontHeight = 20
 	blackChar  = 1
 )
 
