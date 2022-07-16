@@ -129,7 +129,7 @@ func (a *Audio) makeBackgroundSound(length int) []byte {
 		snd := reversedSound(a.digitSounds[a.rng.Intn(10)])
 		snd = changeSpeed(snd, a.rng.Float(0.8, 1.4))
 		place := a.rng.Intn(len(b) - len(snd))
-		setSoundLevel(snd, a.rng.Float(0.2, 0.5))
+		setSoundLevel(snd, a.rng.Float(0.3, 0.46))
 		mixSound(b[place:], snd)
 	}
 	return b
