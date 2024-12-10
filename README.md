@@ -213,7 +213,7 @@ NewAudio returns a new audio captcha with the given digits, where each digit
 must be in range 0-9. Digits are pronounced in the given language. If there
 are no sounds for the given language, English is used.
 
-Possible values for lang are "en", "ja", "ru", "zh".
+Possible values for lang are "en", "ja", "ru", "zh", "pt".
 
 ### func (*Audio) EncodedLen
 
