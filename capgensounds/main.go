@@ -18,7 +18,7 @@ import (
 
 const headerLen = 44
 
-var langs = []string{"en", "ru", "zh", "ja"}
+var langs = []string{"en", "ru", "zh", "ja", "pt"}
 
 func writeVar(w io.Writer, b []byte, prefix string) {
 	i := 0
