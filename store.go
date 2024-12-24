@@ -99,6 +99,9 @@ func (s *memoryStore) collect() {
 	now := time.Now()
 	s.Lock()
 	defer s.Unlock()
+	if s.numStored == 0 {
+		return
+	}
 	s.numStored = 0
 	for e := s.idByTime.Front(); e != nil; {
 		ev, ok := e.Value.(idByTimeValue)
